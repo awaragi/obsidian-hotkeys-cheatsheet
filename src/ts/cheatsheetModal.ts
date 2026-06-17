@@ -1,4 +1,4 @@
-import { App, Modal, Platform } from "obsidian";
+import { App, Modal, Platform, setIcon, setTooltip } from "obsidian";
 import { collectHotkeys, CategoryGroup } from "./hotkeyCollector";
 import { t } from "./i18n";
 
@@ -79,6 +79,16 @@ export class CheatsheetModal extends Modal {
   private filterOpen = false;
   private gridEl!: HTMLElement;
 
+  private collapseToggleBtn!: HTMLButtonElement;
+
+  // Collapse state: category names in this set are collapsed.
+  // Empty on every modal open (all expanded by default).
+  private collapsedSections = new Set<string>();
+
+  // Snapshot of collapsedSections taken when search becomes active,
+  // restored when search is cleared.
+  private searchSnapshot: Set<string> | null = null;
+
   private readonly handleOutsideClick = (e: MouseEvent) => {
     if (this.filterOpen && !this.filterDropdown.contains(e.target as Node)) {
       this.filterOpen = false;
@@ -97,19 +107,19 @@ export class CheatsheetModal extends Modal {
   close() {
     if (this.searchQuery) {
       this.searchInput.value = "";
-      this.searchQuery = "";
-      this.renderGrid();
+      this.clearSearch();
     } else {
       super.close();
     }
   }
 
   onOpen() {
-    // Make the modal fill most of the window
     this.modalEl.addClass("hkc-full-modal");
-
-    // Use Obsidian's native title bar instead of a custom header row
     this.titleEl.setText(t("modal.title"));
+
+    // Reset collapse state on every open
+    this.collapsedSections = new Set();
+    this.searchSnapshot = null;
 
     this.groups = collectHotkeys(this.app);
     this.buildUI();
@@ -139,14 +149,39 @@ export class CheatsheetModal extends Modal {
   private buildToolbar(parent: HTMLElement) {
     const toolbar = parent.createDiv({ cls: "hkc-toolbar" });
 
-    // Search input
-    this.searchInput = toolbar.createEl("input", {
+    // Search input wrapper
+    const searchWrapper = toolbar.createDiv({ cls: "hkc-search-wrapper" });
+    this.searchInput = searchWrapper.createEl("input", {
       type: "text",
       placeholder: t("modal.search_placeholder"),
       cls: "hkc-search",
     });
+
+    const clearBtn = searchWrapper.createEl("button", { cls: "hkc-search-clear hkc-hidden" });
+    setIcon(clearBtn, "x");
+    clearBtn.addEventListener("click", () => {
+      this.searchInput.value = "";
+      this.searchInput.focus();
+      clearBtn.addClass("hkc-hidden");
+      this.searchQuery = "";
+      this.restoreSnapshot();
+      this.updateToolbarState();
+      this.renderGrid();
+    });
+
     this.searchInput.addEventListener("input", () => {
+      const prev = this.searchQuery;
       this.searchQuery = this.searchInput.value;
+
+      clearBtn.toggleClass("hkc-hidden", this.searchQuery === "");
+
+      if (prev === "" && this.searchQuery !== "") {
+        this.searchSnapshot = new Set(this.collapsedSections);
+      } else if (this.searchQuery === "" && prev !== "") {
+        this.restoreSnapshot();
+      }
+
+      this.updateToolbarState();
       this.renderGrid();
     });
 
@@ -185,6 +220,61 @@ export class CheatsheetModal extends Modal {
     });
 
     this.filterDropdown.addEventListener("click", (e) => e.stopPropagation());
+
+    // Collapse / Expand All toggle button — far right
+    this.collapseToggleBtn = toolbar.createEl("button", {
+      cls: "hkc-icon-btn",
+    });
+    this.collapseToggleBtn.addEventListener("click", () => {
+      const allCollapsed = this.groups.every((g) =>
+        this.collapsedSections.has(g.category)
+      );
+      if (allCollapsed) {
+        this.collapsedSections.clear();
+      } else {
+        for (const group of this.groups) {
+          this.collapsedSections.add(group.category);
+        }
+      }
+      this.renderGrid();
+    });
+    this.updateCollapseToggle();
+  }
+
+  // ── Toolbar state helpers ──────────────────────────────────────────────
+
+  private updateToolbarState() {
+    const searching = this.searchQuery !== "";
+    this.collapseToggleBtn.disabled = searching;
+    this.collapseToggleBtn.toggleClass("hkc-btn-disabled", searching);
+    this.updateCollapseToggle();
+  }
+
+  private updateCollapseToggle() {
+    const allCollapsed =
+      this.groups.length > 0 &&
+      this.groups.every((g) => this.collapsedSections.has(g.category));
+    if (allCollapsed) {
+      setIcon(this.collapseToggleBtn, "chevrons-up-down");
+      setTooltip(this.collapseToggleBtn, t("modal.expand_all"));
+    } else {
+      setIcon(this.collapseToggleBtn, "chevrons-down-up");
+      setTooltip(this.collapseToggleBtn, t("modal.collapse_all"));
+    }
+  }
+
+  private restoreSnapshot() {
+    if (this.searchSnapshot !== null) {
+      this.collapsedSections = this.searchSnapshot;
+      this.searchSnapshot = null;
+    }
+  }
+
+  private clearSearch() {
+    this.searchQuery = "";
+    this.restoreSnapshot();
+    this.updateToolbarState();
+    this.renderGrid();
   }
 
   // ── Grid Rendering ────────────────────────────────────────────────────────
@@ -195,6 +285,7 @@ export class CheatsheetModal extends Modal {
 
     const query = this.searchQuery.toLowerCase();
     const hasModFilter = this.activeModifiers.size > 0;
+    const isSearching = query !== "";
     let totalVisible = 0;
 
     for (const group of this.groups) {
@@ -220,22 +311,60 @@ export class CheatsheetModal extends Modal {
       if (visibleEntries.length === 0) continue;
       totalVisible += visibleEntries.length;
 
-      this.renderCategorySection(el, group.category, visibleEntries, query);
+      // While searching, force-expand all sections
+      const isCollapsed =
+        !isSearching && this.collapsedSections.has(group.category);
+
+      this.renderCategorySection(
+        el,
+        group.category,
+        visibleEntries,
+        query,
+        isCollapsed,
+        isSearching
+      );
     }
 
     if (totalVisible === 0) {
       el.createDiv({ text: t("modal.no_results"), cls: "hkc-no-results" });
     }
+
+    this.updateCollapseToggle();
   }
 
   private renderCategorySection(
     parent: HTMLElement,
     category: string,
     entries: CategoryGroup["entries"],
-    query: string
+    query: string,
+    isCollapsed: boolean,
+    isSearching: boolean
   ) {
     const section = parent.createDiv({ cls: "hkc-section" });
-    section.createEl("h3", { text: category, cls: "hkc-category-heading" });
+
+    const heading = section.createEl("h3", {
+      cls: "hkc-category-heading",
+    });
+
+    // Arrow indicator
+    const arrow = heading.createSpan({ cls: "hkc-collapse-arrow" });
+    arrow.textContent = isCollapsed ? "▸" : "▾";
+    heading.appendText(" " + category);
+
+    // Click to toggle collapse — disabled while searching
+    if (!isSearching) {
+      heading.addClass("hkc-heading-interactive");
+      heading.addEventListener("click", () => {
+        if (this.collapsedSections.has(category)) {
+          this.collapsedSections.delete(category);
+        } else {
+          this.collapsedSections.add(category);
+        }
+        this.renderGrid();
+      });
+    }
+
+    if (isCollapsed) return;
 
     for (const entry of entries) {
       const entryEl = section.createDiv({ cls: "hkc-entry" });
@@ -251,7 +380,6 @@ export class CheatsheetModal extends Modal {
       // Hotkey badge rows
       const hotkeysEl = entryEl.createDiv({ cls: "hkc-entry-hotkeys" });
       for (const hk of entry.hotkeys) {
-        // Does this binding's key match the search query?
         const keyMatches =
           query.length > 0 && hk.key.toLowerCase() === query;
 

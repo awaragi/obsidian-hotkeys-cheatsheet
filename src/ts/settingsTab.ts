@@ -1,12 +1,14 @@
-import { App, PluginSettingTab } from "obsidian";
+import { App, PluginSettingTab, Setting } from "obsidian";
 import type HotkeysCheatsheetPlugin from "./main";
 import { t } from "./i18n";
 
 export interface HotkeysCheatsheetSettings {
-  // No user-configurable settings in v1
+  showRibbonIcon: boolean;
 }
 
-export const DEFAULT_SETTINGS: HotkeysCheatsheetSettings = {};
+export const DEFAULT_SETTINGS: HotkeysCheatsheetSettings = {
+  showRibbonIcon: true,
+};
 
 export class HotkeysCheatsheetSettingTab extends PluginSettingTab {
   plugin: HotkeysCheatsheetPlugin;
@@ -20,6 +22,15 @@ export class HotkeysCheatsheetSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     containerEl.createEl("h2", { text: t("settings.heading") });
+
+    new Setting(containerEl)
+      .setName(t("settings.ribbon.label"))
+      .setDesc(t("settings.ribbon.desc"))
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.showRibbonIcon)
+          .onChange((value) => this.plugin.setRibbonVisible(value))
+      );
 
     const about = containerEl.createDiv({ cls: "hkc-about" });
 

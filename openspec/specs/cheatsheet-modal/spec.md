@@ -30,15 +30,27 @@ The plugin SHALL register a ribbon icon (keyboard icon) and a command palette en
 ---
 
 ### Requirement: Modal displays categorised hotkeys as a responsive grid
-The modal SHALL render assigned hotkeys grouped by category, each group as a labelled section. Sections SHALL be laid out in a CSS Grid with `auto-fill, minmax(220px, 1fr)` so they reflow automatically across viewport widths.
+The modal SHALL render assigned hotkeys grouped by category, each group as a labelled section. Sections SHALL be laid out using CSS multi-column (`columns: 220px`) so content flows top-to-bottom within a column before spilling into the next. Columns SHALL use greedy fill (`column-fill: auto`) so each column fills to the modal height before the next begins. The container SHALL scroll horizontally when more columns exist than fit the modal width, and SHALL scroll vertically as a fallback when only one column fits.
+
+Category headings SHALL use `break-after: avoid` so a heading is never left alone at the bottom of a column without at least one following entry.
+
+Category headings SHALL be rendered at `font-ui-small` size, `font-weight: 700`, and `color: var(--text-normal)` for high contrast.
 
 #### Scenario: Groups render with headings
 - **WHEN** the modal opens
 - **THEN** each category is rendered with a visible heading and its hotkey entries below it
 
+#### Scenario: Content flows vertically before spilling to next column
+- **WHEN** the modal has enough entries to fill more than one column
+- **THEN** the first column fills completely top-to-bottom before entries appear in the second column
+
 #### Scenario: Grid reflows on narrow viewport
 - **WHEN** the modal is displayed at a narrow width (< ~600px)
-- **THEN** categories stack into a single column
+- **THEN** categories stack into a single column with vertical scroll
+
+#### Scenario: Heading does not orphan at column bottom
+- **WHEN** a category heading falls at the bottom of a column with no entries below it in that column
+- **THEN** the heading flows to the top of the next column alongside its first entry
 
 ---
 
@@ -132,6 +144,61 @@ The plugin settings tab SHALL display a read-only about section containing: plug
 #### Scenario: About section renders in settings
 - **WHEN** the user opens Obsidian Settings and navigates to the Hotkeys Cheatsheet plugin
 - **THEN** the plugin name, version, author, and description are displayed
+
+---
+
+### Requirement: Category sections are individually collapsible
+Each category section SHALL be collapsible by clicking its heading. The heading SHALL display a `▾` indicator when expanded and `▸` when collapsed. All sections SHALL be expanded on every modal open — collapse state is not persisted between opens. While a search query is active, heading click SHALL have no effect (sections are force-expanded by search).
+
+#### Scenario: Section collapses on heading click
+- **WHEN** the user clicks an expanded section heading
+- **THEN** the section's entries are hidden and the heading shows `▸`
+
+#### Scenario: Section expands on heading click
+- **WHEN** the user clicks a collapsed section heading
+- **THEN** the section's entries become visible and the heading shows `▾`
+
+#### Scenario: All sections expanded on modal open
+- **WHEN** the modal is opened
+- **THEN** all sections are expanded regardless of previous collapse state
+
+#### Scenario: Heading click disabled during search
+- **WHEN** a search query is active and the user clicks a section heading
+- **THEN** the section state does not change
+
+---
+
+### Requirement: Toolbar provides a collapse/expand all toggle
+The modal toolbar SHALL include a single icon button at the far right that toggles between collapsing all sections and expanding all sections. When any section is expanded, clicking the button collapses all; when all sections are collapsed, clicking the button expands all. The icon SHALL update to reflect the current state (`chevrons-down-up` when collapsible, `chevrons-up-down` when expandable). The button SHALL be disabled while a search query is active.
+
+#### Scenario: Collapse All collapses all sections
+- **WHEN** one or more sections are expanded and the user clicks the toggle button
+- **THEN** all section entries are hidden and all headings show `▸`
+
+#### Scenario: Expand All expands all sections
+- **WHEN** all sections are collapsed and the user clicks the toggle button
+- **THEN** all section entries are visible and all headings show `▾`
+
+#### Scenario: Toggle disabled during search
+- **WHEN** a search query is active
+- **THEN** the collapse/expand toggle button is disabled and non-interactive
+
+---
+
+### Requirement: Search force-expands sections and restores collapse state on clear
+When the user begins typing a search query, the modal SHALL snapshot the current collapse state and force-expand all sections so no matching entries are hidden. When the search query is cleared, the collapse state SHALL be restored to the pre-search snapshot.
+
+#### Scenario: Search expands collapsed sections
+- **WHEN** one or more sections are collapsed and the user types a search query
+- **THEN** all sections become expanded
+
+#### Scenario: Clearing search restores collapse state
+- **WHEN** the user clears the search input after typing
+- **THEN** sections return to the collapse state that existed before the search began
+
+#### Scenario: Escape clears search and restores collapse state
+- **WHEN** the search input has text and the user presses Escape
+- **THEN** the search is cleared and the pre-search collapse state is restored
 
 ---
 

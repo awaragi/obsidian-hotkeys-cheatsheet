@@ -4,8 +4,12 @@
   "modal.title": "Aide-mémoire des raccourcis",
   "modal.search_placeholder": "Rechercher par nom ou touche...",
   "modal.filter_label": "Modificateurs",
+  "modal.expand_all": "Tout développer",
+  "modal.collapse_all": "Tout réduire",
   "modal.no_results": "Aucun résultat",
   "settings.heading": "Aide-mémoire des raccourcis",
+  "settings.ribbon.label": "Afficher l'icône dans le ruban",
+  "settings.ribbon.desc": "Affiche l'icône clavier dans la barre de ruban.",
   "settings.about.name": "Aide-mémoire des raccourcis",
   "settings.about.description": "Affiche une fiche de référence en direct, catégorisée et consultable de vos raccourcis Obsidian.",
   "settings.about.author": "Pierre Awaragi"

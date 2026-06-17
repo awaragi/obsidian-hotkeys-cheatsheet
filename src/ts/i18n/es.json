@@ -4,8 +4,12 @@
   "modal.title": "Hoja de referencia de atajos",
   "modal.search_placeholder": "Buscar por nombre o tecla...",
   "modal.filter_label": "Modificadores",
+  "modal.expand_all": "Expandir todo",
+  "modal.collapse_all": "Contraer todo",
   "modal.no_results": "Sin resultados",
   "settings.heading": "Hoja de referencia de atajos",
+  "settings.ribbon.label": "Mostrar icono en el panel lateral",
+  "settings.ribbon.desc": "Muestra el icono de teclado en la barra del panel lateral.",
   "settings.about.name": "Hoja de referencia de atajos",
   "settings.about.description": "Muestra una ficha de referencia en vivo, categorizada y con búsqueda de tus atajos de Obsidian.",
   "settings.about.author": "Pierre Awaragi"
