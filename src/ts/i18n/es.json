@@ -1,7 +1,12 @@
 {
   "ribbon.tooltip": "Abrir hoja de referencia de atajos",
   "command.name": "Abrir hoja de referencia de atajos",
+  "modal.title": "Hoja de referencia de atajos",
+  "modal.search_placeholder": "Buscar por nombre o tecla...",
+  "modal.filter_label": "Modificadores",
+  "modal.no_results": "Sin resultados",
   "settings.heading": "Hoja de referencia de atajos",
-  "settings.placeholder.name": "Ajuste de marcador de posición",
-  "settings.placeholder.desc": "Esto es un marcador de posición — añade aquí los ajustes reales."
+  "settings.about.name": "Hoja de referencia de atajos",
+  "settings.about.description": "Muestra una ficha de referencia en vivo, categorizada y con búsqueda de tus atajos de Obsidian.",
+  "settings.about.author": "Pierre Awaragi"
 }

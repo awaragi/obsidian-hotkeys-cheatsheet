@@ -1,7 +1,12 @@
 {
   "ribbon.tooltip": "Open Hotkeys Cheatsheet",
   "command.name": "Open Hotkeys Cheatsheet",
+  "modal.title": "Hotkeys Cheatsheet",
+  "modal.search_placeholder": "Search by name or key...",
+  "modal.filter_label": "Modifiers",
+  "modal.no_results": "No results",
   "settings.heading": "Hotkeys Cheatsheet",
-  "settings.placeholder.name": "Placeholder setting",
-  "settings.placeholder.desc": "This is a placeholder — add real settings here."
+  "settings.about.name": "Hotkeys Cheatsheet",
+  "settings.about.description": "Display a live, categorised, searchable reference card of your Obsidian hotkeys.",
+  "settings.about.author": "Pierre Awaragi"
 }

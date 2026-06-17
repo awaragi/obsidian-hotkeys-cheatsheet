@@ -1,7 +1,12 @@
 {
   "ribbon.tooltip": "Ouvrir l'aide-mémoire des raccourcis",
   "command.name": "Ouvrir l'aide-mémoire des raccourcis",
+  "modal.title": "Aide-mémoire des raccourcis",
+  "modal.search_placeholder": "Rechercher par nom ou touche...",
+  "modal.filter_label": "Modificateurs",
+  "modal.no_results": "Aucun résultat",
   "settings.heading": "Aide-mémoire des raccourcis",
-  "settings.placeholder.name": "Paramètre fictif",
-  "settings.placeholder.desc": "Ceci est un paramètre fictif — ajoutez vos vrais paramètres ici."
+  "settings.about.name": "Aide-mémoire des raccourcis",
+  "settings.about.description": "Affiche une fiche de référence en direct, catégorisée et consultable de vos raccourcis Obsidian.",
+  "settings.about.author": "Pierre Awaragi"
 }
