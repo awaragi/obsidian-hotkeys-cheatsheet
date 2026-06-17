@@ -1,0 +1,7 @@
+{
+  "ribbon.tooltip": "Open Hotkeys Cheatsheet",
+  "command.name": "Open Hotkeys Cheatsheet",
+  "settings.heading": "Hotkeys Cheatsheet",
+  "settings.placeholder.name": "Placeholder setting",
+  "settings.placeholder.desc": "This is a placeholder — add real settings here."
+}

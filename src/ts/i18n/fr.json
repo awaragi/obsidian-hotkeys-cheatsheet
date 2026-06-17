@@ -1,0 +1,7 @@
+{
+  "ribbon.tooltip": "Ouvrir l'aide-mémoire des raccourcis",
+  "command.name": "Ouvrir l'aide-mémoire des raccourcis",
+  "settings.heading": "Aide-mémoire des raccourcis",
+  "settings.placeholder.name": "Paramètre fictif",
+  "settings.placeholder.desc": "Ceci est un paramètre fictif — ajoutez vos vrais paramètres ici."
+}

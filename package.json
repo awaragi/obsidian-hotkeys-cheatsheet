@@ -1,0 +1,26 @@
+{
+  "name": "obsidian-hotkeys-cheatsheet",
+  "version": "1.0.0",
+  "description": "Obsidian plugin: display a searchable hotkeys cheatsheet",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "node esbuild.config.mjs production",
+    "deploy": "node scripts/deploy.mjs",
+    "dev:deploy": "npm run dev && npm run deploy",
+    "clean": "rm -rf dist",
+    "release:prepare": "node scripts/version.mjs",
+    "release": "node scripts/publish.mjs"
+  },
+  "keywords": [],
+  "author": "Pierre Awaragi",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "builtin-modules": "^3.3.0",
+    "esbuild": "^0.21.0",
+    "obsidian": "latest",
+    "typescript": "^5.4.0"
+  }
+}

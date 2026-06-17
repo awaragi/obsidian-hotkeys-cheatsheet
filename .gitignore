@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+main.js
+main.js.map
+
+# TypeScript
+*.js.map
+
+# Environment
+.env
+.env.local
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Obsidian test vault (if any)
+test-vault/
