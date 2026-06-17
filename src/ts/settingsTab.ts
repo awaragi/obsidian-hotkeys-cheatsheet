@@ -1,14 +1,12 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, PluginSettingTab } from "obsidian";
 import type HotkeysCheatsheetPlugin from "./main";
 import { t } from "./i18n";
 
 export interface HotkeysCheatsheetSettings {
-  // TODO: add plugin settings here
+  // No user-configurable settings in v1
 }
 
-export const DEFAULT_SETTINGS: HotkeysCheatsheetSettings = {
-  // TODO: add default values here
-};
+export const DEFAULT_SETTINGS: HotkeysCheatsheetSettings = {};
 
 export class HotkeysCheatsheetSettingTab extends PluginSettingTab {
   plugin: HotkeysCheatsheetPlugin;
@@ -23,9 +21,19 @@ export class HotkeysCheatsheetSettingTab extends PluginSettingTab {
     containerEl.empty();
     containerEl.createEl("h2", { text: t("settings.heading") });
 
-    // TODO: add settings here
-    new Setting(containerEl)
-      .setName(t("settings.placeholder.name"))
-      .setDesc(t("settings.placeholder.desc"));
+    const about = containerEl.createDiv({ cls: "hkc-about" });
+
+    about.createEl("p", { cls: "hkc-about-name" }).innerHTML =
+      `<strong>${t("settings.about.name")}</strong> &mdash; v${this.plugin.manifest.version}`;
+
+    about.createEl("p", {
+      text: t("settings.about.description"),
+      cls: "hkc-about-desc",
+    });
+
+    about.createEl("p", {
+      text: t("settings.about.author"),
+      cls: "hkc-about-author",
+    });
   }
 }

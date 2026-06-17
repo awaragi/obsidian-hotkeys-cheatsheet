@@ -1,8 +1,46 @@
 # Hotkeys Cheatsheet
 
-An Obsidian plugin that displays a searchable cheatsheet of all your configured hotkeys.
+A live, searchable reference card for all your Obsidian keyboard shortcuts — opened instantly from the ribbon or command palette.
+
+## What it does
+
+Obsidian's built-in hotkey settings show a flat alphabetical list of 250+ commands. This plugin gives you a visual overview instead: a categorised grid with every shortcut you have assigned, complete with `Cmd`, `Shift`, `Option`, `Ctrl` key badges rendered for your OS.
+
+![Hotkeys Cheatsheet modal](docs/screenshot.png)
+
+### Features
+
+- **Live data** — reads your actual keymap at runtime (default hotkeys + your custom overrides), so it always reflects what's really assigned
+- **Categorised grid** — core commands grouped by workflow (Editing, Navigation, Search, Files & Vault, Workspace); community plugin commands grouped by plugin name
+- **Real-time search** — filter by command name or key character (type `b` to find all `Cmd B`, `Cmd Shift B`, etc.)
+- **Modifier filter** — dropdown to show only hotkeys that include specific modifiers (AND logic: select Cmd + Shift to find all `Cmd Shift` combos)
+- **OS-aware badges** — `Cmd`/`Option` on macOS, `Ctrl`/`Alt`/`Win` on Windows/Linux
+- **Special key icons** — arrow keys show ↑↓←→, Enter shows ↵, Backspace shows ⌫, Tab shows ⇥, etc.
+- **Responsive layout** — CSS Grid that reflows from 4 columns down to 1 depending on window width
+- **Theme-compatible** — uses Obsidian CSS variables, works with any light or dark theme
+
+### How to open it
+
+- Click the keyboard icon in the ribbon (left sidebar)
+- Or run **Open Hotkeys Cheatsheet** from the command palette (`Cmd P`)
+
+### Keyboard behaviour
+
+| Key | Action |
+|-----|--------|
+| `Escape` (search active) | Clears the search input |
+| `Escape` (search empty) | Closes the modal |
+
+---
 
 ## Development
+
+### Prerequisites
+
+- Node.js ≥ 18
+- An Obsidian vault for testing
+
+### Setup
 
 ```bash
 # Install dependencies
@@ -10,35 +48,74 @@ npm install
 
 # Copy .env.example and set your vault plugin path
 cp .env.example .env
+```
 
-# Development build (with sourcemaps)
-npm run dev
+### Scripts
 
-# Production build
+```bash
+# Production build → dist/main.js
 npm run build
 
-# Copy dist/ to your local vault (reads OBSIDIAN_PLUGIN_DIR from .env)
+# Development build (sourcemaps, watch mode)
+npm run dev
+
+# Copy dist/ to your local vault plugin directory
 npm run deploy
 
-# Development build + deploy in one step
+# Build + deploy in one step
 npm run dev:deploy
 
 # Remove dist/
 npm run clean
 ```
 
-### Releases
+### Project structure
 
-Push a version tag to trigger a GitHub Actions build and draft release:
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
 ```
+src/
+├── ts/
+│   ├── main.ts              Plugin entry point — registers ribbon icon and command
+│   ├── settingsTab.ts       Settings tab — about blurb only (no user settings in v1)
+│   ├── cheatsheetModal.ts   Modal UI — grid, search, modifier filter, kbd badges
+│   ├── hotkeyCollector.ts   Data layer — merges defaultKeys + customKeys, categorises, sorts
+│   ├── categories.ts        Curated prefix → category map and display order
+│   ├── i18n.ts              Locale detection and t() helper
+│   └── i18n/
+│       ├── en.json          English strings
+│       ├── fr.json          French strings
+│       └── es.json          Spanish strings
+└── css/
+    └── styles.css           All plugin styles (Obsidian CSS vars, no hardcoded colours)
+```
+
+### How hotkey data is collected
+
+Obsidian exposes two internal maps on `app.hotkeyManager`:
+
+```ts
+app.hotkeyManager.defaultKeys  // Record<commandId, Hotkey[]> — Obsidian built-in defaults
+app.hotkeyManager.customKeys   // Record<commandId, Hotkey[]> — user overrides
+```
+
+These are undocumented internal properties. A runtime guard checks for their existence and emits a console warning if they're missing (future-proofing against API changes).
+
+Merge rule: if a command ID exists in `customKeys`, use those hotkeys (even `[]` — meaning the user cleared the default); otherwise fall back to `defaultKeys`.
+
+> **Why not `getHotkeys(id)`?** It returns only user overrides, missing all built-in defaults (~41 hotkeys in a standard vault).
+
+### Categorisation
+
+Commands are categorised using a hybrid strategy:
+
+1. If the command ID prefix (before the first `:`) matches a curated map → use the mapped workflow category
+2. If the prefix is unknown → title-case it as a plugin group name
+3. If there is no `:` in the ID → parse the display name for a `"PluginName: …"` pattern; fall back to "Other"
+
+Core category order: Editing → Navigation → Search → Files & Vault → Workspace → (plugin groups, alphabetical)
 
 ### Localisation
 
-The plugin UI is available in **English** (default), **French**, and **Spanish**. The language is detected automatically from Obsidian's language setting.
+The plugin UI is available in **English** (default), **French**, and **Spanish**. Language is detected automatically from Obsidian's locale setting.
 
 To add a new language:
 
@@ -49,4 +126,13 @@ To add a new language:
    import de from "./i18n/de.json";
    const locales = { en, fr, es, de };
    ```
-4. Rebuild with `npm run build`
+4. Rebuild: `npm run build`
+
+### Releases
+
+Push a version tag to trigger a GitHub Actions build and draft release:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```

@@ -5,6 +5,7 @@ import {
   HotkeysCheatsheetSettingTab,
 } from "./settingsTab";
 import { t } from "./i18n";
+import { CheatsheetModal } from "./cheatsheetModal";
 
 export default class HotkeysCheatsheetPlugin extends Plugin {
   settings: HotkeysCheatsheetSettings;
@@ -33,6 +34,6 @@ export default class HotkeysCheatsheetPlugin extends Plugin {
   }
 
   private openCheatsheet() {
-    // TODO: implement cheatsheet view
+    new CheatsheetModal(this.app).open();
   }
 }

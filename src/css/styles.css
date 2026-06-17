@@ -1,2 +1,262 @@
-/* Hotkeys Cheatsheet — styles */
-/* TODO: add plugin styles here */
+/* ── Hotkeys Cheatsheet — Modal Styles ──────────────────────────────────── */
+/* All colours use Obsidian CSS custom properties for full theme compatibility. */
+
+/* ── Modal size override ─────────────────────────────────────────────────── */
+/* Applied to this.modalEl to make the modal fill most of the window. */
+
+.hkc-full-modal {
+  width: min(90vw, 1400px) !important;
+  min-width: min(560px, 90vw) !important;
+  height: min(85vh, 1000px) !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+/* ── Content container ───────────────────────────────────────────────────── */
+/* Applied to this.contentEl — flex column that fills the modal content area. */
+
+.hkc-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────────── */
+
+.hkc-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  flex-shrink: 0;
+}
+
+.hkc-search {
+  flex: 1;
+  background: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.hkc-search:focus {
+  border-color: var(--interactive-accent);
+}
+
+.hkc-search::placeholder {
+  color: var(--text-faint);
+}
+
+/* ── Modifier Filter ─────────────────────────────────────────────────────── */
+
+.hkc-filter-wrapper {
+  position: relative;
+}
+
+.hkc-filter-btn {
+  background: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: var(--font-ui-small);
+  padding: 6px 12px;
+  white-space: nowrap;
+  transition: color 0.15s, background 0.15s;
+}
+
+.hkc-filter-btn:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+.hkc-filter-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 100;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-s);
+  padding: 6px 0;
+  min-width: 130px;
+}
+
+.hkc-hidden {
+  display: none !important;
+}
+
+.hkc-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  cursor: pointer;
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+  user-select: none;
+  transition: background 0.1s;
+}
+
+.hkc-filter-item:hover {
+  background: var(--background-modifier-hover);
+}
+
+.hkc-filter-item input[type="checkbox"] {
+  accent-color: var(--interactive-accent);
+  cursor: pointer;
+}
+
+/* ── Category Grid ───────────────────────────────────────────────────────── */
+
+.hkc-grid {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 16px 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  align-content: start;
+}
+
+/* ── Category Section ────────────────────────────────────────────────────── */
+
+.hkc-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hkc-category-heading {
+  margin: 0 0 6px;
+  font-size: var(--font-ui-smaller);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+/* ── Hotkey Entry ────────────────────────────────────────────────────────── */
+
+.hkc-entry {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.hkc-entry-name {
+  flex: 1;
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+  line-height: 1.4;
+  min-width: 0;
+  word-break: break-word;
+}
+
+/* Search highlight in command names */
+.hkc-highlight {
+  background: var(--text-highlight-bg);
+  color: var(--text-normal);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.hkc-entry-hotkeys {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.hkc-hk-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* ── Kbd Badges ──────────────────────────────────────────────────────────── */
+
+.hkc-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-family: var(--font-monospace);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  min-width: 22px;
+  padding: 2px 5px;
+  white-space: nowrap;
+}
+
+/* Highlighted key badge when search query matches the key character */
+.hkc-kbd-match {
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent-hover);
+  color: var(--text-on-accent);
+}
+
+/* ── Empty State ─────────────────────────────────────────────────────────── */
+
+.hkc-no-results {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-faint);
+  font-size: var(--font-ui-small);
+}
+
+/* ── Responsive reflow ───────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .hkc-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hkc-toolbar {
+    flex-wrap: wrap;
+  }
+}
+
+/* ── Settings about section ──────────────────────────────────────────────── */
+
+.hkc-about {
+  padding: 4px 0;
+}
+
+.hkc-about-name {
+  margin: 0 0 6px;
+  font-size: var(--font-ui-medium);
+  color: var(--text-normal);
+}
+
+.hkc-about-desc {
+  margin: 0 0 4px;
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+}
+
+.hkc-about-author {
+  margin: 0;
+  font-size: var(--font-ui-small);
+  color: var(--text-faint);
+}
