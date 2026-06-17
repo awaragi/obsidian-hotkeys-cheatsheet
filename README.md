@@ -4,20 +4,23 @@ A live, searchable reference card for all your Obsidian keyboard shortcuts — o
 
 ## What it does
 
-Obsidian's built-in hotkey settings show a flat alphabetical list of 250+ commands. This plugin gives you a visual overview instead: a categorised grid with every shortcut you have assigned, complete with `Cmd`, `Shift`, `Option`, `Ctrl` key badges rendered for your OS.
+Obsidian's built-in hotkey settings show a flat alphabetical list of 250+ commands. This plugin gives you a visual overview instead: a newspaper-style multi-column layout with every shortcut you have assigned, complete with `Cmd`, `Shift`, `Option`, `Ctrl` key badges rendered for your OS.
 
 ![Hotkeys Cheatsheet modal](docs/screenshot.png)
 
 ### Features
 
 - **Live data** — reads your actual keymap at runtime (default hotkeys + your custom overrides), so it always reflects what's really assigned
-- **Categorised grid** — core commands grouped by workflow (Editing, Navigation, Search, Files & Vault, Workspace); community plugin commands grouped by plugin name
-- **Real-time search** — filter by command name or key character (type `b` to find all `Cmd B`, `Cmd Shift B`, etc.)
+- **Newspaper-style columns** — content flows top-to-bottom within each column then spills right; scroll horizontally to see more columns, or vertically on narrow viewports
+- **Categorised sections** — core commands grouped by workflow (Editing, Navigation, Search, Files & Vault, Workspace); community plugin commands grouped by plugin name
+- **Collapsible sections** — click any category heading to collapse or expand it; collapse/expand all with the icon button in the toolbar
+- **Real-time search** — filter by command name or key character (type `b` to find all `Cmd B`, `Cmd Shift B`, etc.); collapsed sections auto-expand while searching and restore when cleared
+- **Search clear button** — `×` button inside the search field clears the query instantly
 - **Modifier filter** — dropdown to show only hotkeys that include specific modifiers (AND logic: select Cmd + Shift to find all `Cmd Shift` combos)
 - **OS-aware badges** — `Cmd`/`Option` on macOS, `Ctrl`/`Alt`/`Win` on Windows/Linux
 - **Special key icons** — arrow keys show ↑↓←→, Enter shows ↵, Backspace shows ⌫, Tab shows ⇥, etc.
-- **Responsive layout** — CSS Grid that reflows from 4 columns down to 1 depending on window width
 - **Theme-compatible** — uses Obsidian CSS variables, works with any light or dark theme
+- **Ribbon toggle** — hide or show the ribbon icon from Settings; the command palette entry always remains available
 
 ### How to open it
 
@@ -28,8 +31,18 @@ Obsidian's built-in hotkey settings show a flat alphabetical list of 250+ comman
 
 | Key | Action |
 |-----|--------|
-| `Escape` (search active) | Clears the search input |
+| `Escape` (search active) | Clears the search input and restores pre-search collapse state |
 | `Escape` (search empty) | Closes the modal |
+
+---
+
+## Settings
+
+Open **Settings → Hotkeys Cheatsheet** to configure:
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| Show ribbon icon | On | Toggles the keyboard icon in the ribbon toolbar. Takes effect immediately without restarting Obsidian. The command palette entry is unaffected. |
 
 ---
 
@@ -74,9 +87,9 @@ npm run clean
 ```
 src/
 ├── ts/
-│   ├── main.ts              Plugin entry point — registers ribbon icon and command
-│   ├── settingsTab.ts       Settings tab — about blurb only (no user settings in v1)
-│   ├── cheatsheetModal.ts   Modal UI — grid, search, modifier filter, kbd badges
+│   ├── main.ts              Plugin entry point — ribbon icon, command, ribbon visibility setting
+│   ├── settingsTab.ts       Settings tab — ribbon toggle and about blurb
+│   ├── cheatsheetModal.ts   Modal UI — columns, search, collapse, modifier filter, kbd badges
 │   ├── hotkeyCollector.ts   Data layer — merges defaultKeys + customKeys, categorises, sorts
 │   ├── categories.ts        Curated prefix → category map and display order
 │   ├── i18n.ts              Locale detection and t() helper
