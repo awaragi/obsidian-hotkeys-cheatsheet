@@ -7,6 +7,12 @@ function run(cmd) {
 
 const tag = currentVersion();
 
+const existingTag = execSync("git tag --list " + tag, { cwd: ROOT }).toString().trim();
+if (existingTag === tag) {
+  console.error(`Error: tag '${tag}' already exists. Run 'npm run release:prepare patch|minor|major' first.`);
+  process.exit(1);
+}
+
 console.log(`Tagging ${tag}`);
 run(`git push`);
 run(`git tag ${tag}`);
