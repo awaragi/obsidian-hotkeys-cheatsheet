@@ -3,7 +3,7 @@ name: Release Obsidian plugin
 on:
   push:
     tags:
-      - "v*"
+      - "[0-9]*.*"
 
 jobs:
   build:
@@ -31,5 +31,4 @@ jobs:
           tag="${GITHUB_REF#refs/tags/}"
           gh release create "$tag" \
             --title="$tag" \
-            --draft \
             dist/main.js dist/manifest.json dist/styles.css
