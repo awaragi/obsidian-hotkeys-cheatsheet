@@ -173,7 +173,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-normal);
+  color: var(--text-accent);
   padding-bottom: 4px;
   border-bottom: 1px solid var(--background-modifier-border);
   break-after: avoid;
@@ -185,7 +185,7 @@
 }
 
 .hkc-heading-interactive:hover {
-  color: var(--text-accent);
+  color: var(--interactive-accent);
 }
 
 .hkc-collapse-arrow {
@@ -226,7 +226,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
-  padding: 3px 0;
+  padding: 5px 0;
 }
 
 .hkc-entry-name {

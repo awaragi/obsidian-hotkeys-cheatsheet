@@ -9,8 +9,9 @@
     "moduleResolution": "bundler",
     "importHelpers": true,
     "isolatedModules": true,
-    "strictNullChecks": true,
-    "lib": ["ES2018", "DOM"]
+    "strict": true,
+    "skipLibCheck": true,
+    "lib": ["ES2021", "DOM"]
   },
   "include": ["src/ts/**/*.ts"]
 }

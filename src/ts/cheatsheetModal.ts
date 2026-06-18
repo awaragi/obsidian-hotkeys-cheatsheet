@@ -1,71 +1,9 @@
-import { App, Modal, Platform, setIcon, setTooltip } from "obsidian";
-import { collectHotkeys, CategoryGroup } from "./hotkeyCollector";
+import { App, Modal, setIcon, setTooltip } from "obsidian";
+import { collectHotkeys } from "./hotkeyCollector";
+import type { CategoryGroup } from "./types";
 import { t } from "./i18n";
-
-// ── Modifier display labels ───────────────────────────────────────────────
-
-/** Human-readable modifier badge labels on macOS. */
-const MOD_LABEL_MAC: Record<string, string> = {
-  Mod: "Cmd",
-  Meta: "Cmd",
-  Ctrl: "Ctrl",
-  Shift: "Shift",
-  Alt: "Option",
-};
-
-/** Human-readable modifier badge labels on Windows / Linux. */
-const MOD_LABEL_WIN: Record<string, string> = {
-  Mod: "Ctrl",
-  Meta: "Win",
-  Ctrl: "Ctrl",
-  Shift: "Shift",
-  Alt: "Alt",
-};
-
-function modLabel(token: string): string {
-  return Platform.isMacOS
-    ? (MOD_LABEL_MAC[token] ?? token)
-    : (MOD_LABEL_WIN[token] ?? token);
-}
-
-/**
- * Filter dropdown label for a modifier token.
- * On macOS we show OS names (Cmd, Option…). On Windows we keep the abstract
- * token name to avoid showing "Ctrl" twice (Mod and Ctrl both map to Ctrl).
- */
-function filterLabel(token: string): string {
-  if (!Platform.isMacOS) return token;
-  const map: Record<string, string> = {
-    Mod: "Cmd",
-    Shift: "Shift",
-    Alt: "Option",
-    Ctrl: "Ctrl",
-  };
-  return map[token] ?? token;
-}
-
-// ── Special key icons ─────────────────────────────────────────────────────
-
-const KEY_ICONS: Record<string, string> = {
-  ARROWUP: "↑",
-  ARROWDOWN: "↓",
-  ARROWLEFT: "←",
-  ARROWRIGHT: "→",
-  ENTER: "↵",
-  BACKSPACE: "⌫",
-  DELETE: "⌦",
-  TAB: "⇥",
-  PAGEUP: "PgUp",
-  PAGEDOWN: "PgDn",
-  HOME: "Home",
-  END: "End",
-  ESCAPE: "Esc",
-};
-
-/** Returns a display string for a (already-uppercased) key value. */
-function keyIcon(key: string): string {
-  return KEY_ICONS[key] ?? key;
-}
+import { modLabel, filterLabel, keyIcon } from "./keyDisplay";
+import { matchesFilters } from "./filterHotkeys";
 
 // ── Modal ─────────────────────────────────────────────────────────────────
 
@@ -284,29 +222,13 @@ export class CheatsheetModal extends Modal {
     el.empty();
 
     const query = this.searchQuery.toLowerCase();
-    const hasModFilter = this.activeModifiers.size > 0;
     const isSearching = query !== "";
     let totalVisible = 0;
 
     for (const group of this.groups) {
-      const visibleEntries = group.entries.filter((entry) => {
-        if (hasModFilter) {
-          const matches = entry.hotkeys.some((hk) =>
-            [...this.activeModifiers].every((m) => hk.modifiers.includes(m))
-          );
-          if (!matches) return false;
-        }
-
-        if (query) {
-          const nameMatch = entry.name.toLowerCase().includes(query);
-          const keyMatch = entry.hotkeys.some(
-            (hk) => hk.key.toLowerCase() === query
-          );
-          if (!nameMatch && !keyMatch) return false;
-        }
-
-        return true;
-      });
+      const visibleEntries = group.entries.filter((entry) =>
+        matchesFilters(entry, query, this.activeModifiers)
+      );
 
       if (visibleEntries.length === 0) continue;
       totalVisible += visibleEntries.length;

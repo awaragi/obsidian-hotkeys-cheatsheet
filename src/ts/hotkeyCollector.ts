@@ -1,25 +1,11 @@
 import { App } from "obsidian";
 import { CORE_PREFIX_MAP, CATEGORY_ORDER } from "./categories";
+import type { HotkeyBinding, HotkeyEntry, CategoryGroup } from "./types";
 
-export interface HotkeyBinding {
-  modifiers: string[];
-  key: string;
-}
-
-export interface HotkeyEntry {
-  id: string;
-  name: string;
-  category: string;
-  hotkeys: HotkeyBinding[];
-}
-
-export interface CategoryGroup {
-  category: string;
-  entries: HotkeyEntry[];
-}
+export type { HotkeyBinding, HotkeyEntry, CategoryGroup };
 
 /** Convert a hyphen/underscore/space-separated string to Title Case. */
-function toTitleCase(str: string): string {
+export function toTitleCase(str: string): string {
   return str
     .split(/[-_\s]+/)
     .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : ""))
@@ -35,7 +21,7 @@ function toTitleCase(str: string): string {
  * 3. No colon → try parsing display name for "PluginName: …" pattern.
  * 4. Fallback → "Other".
  */
-function categorise(id: string, displayName: string): string {
+export function categorise(id: string, displayName: string): string {
   const colonIdx = id.indexOf(":");
   if (colonIdx !== -1) {
     const prefix = id.slice(0, colonIdx);
@@ -55,43 +41,18 @@ function categorise(id: string, displayName: string): string {
 }
 
 /**
- * Collect all assigned hotkeys from the Obsidian runtime, categorise them,
- * sort them, and return an ordered list of category groups.
+ * Pure function: merge, normalize, categorize, group, and sort hotkey data
+ * into an ordered list of category groups.
  *
- * Accesses `app.hotkeyManager.defaultKeys` and `app.hotkeyManager.customKeys`,
- * which are undocumented internal properties. A runtime guard protects against
- * future API changes.
+ * @param defaultKeys  - Map of command id → default hotkey bindings.
+ * @param customKeys   - Map of command id → user-customised bindings (wins over default).
+ * @param commands     - Map of command id → { id, name } command descriptor.
  */
-export function collectHotkeys(app: App): CategoryGroup[] {
-  // Runtime guard — these are undocumented internal properties
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const hm = (app as any).hotkeyManager as
-    | {
-        defaultKeys: Record<string, HotkeyBinding[]>;
-        customKeys: Record<string, HotkeyBinding[]>;
-      }
-    | undefined;
-
-  if (!hm?.defaultKeys || !hm?.customKeys) {
-    console.warn(
-      "[Hotkeys Cheatsheet] hotkeyManager.defaultKeys / customKeys unavailable — hotkey display is empty."
-    );
-    return [];
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const commands = (app as any).commands?.commands as
-    | Record<string, { id: string; name: string }>
-    | undefined;
-
-  if (!commands) {
-    console.warn("[Hotkeys Cheatsheet] app.commands.commands unavailable.");
-    return [];
-  }
-
-  const { defaultKeys, customKeys } = hm;
-
-  // All IDs that have any record in either store
+export function buildHotkeyGroups(
+  defaultKeys: Record<string, HotkeyBinding[]>,
+  customKeys: Record<string, HotkeyBinding[]>,
+  commands: Record<string, { id: string; name: string }>
+): CategoryGroup[] {
   const allIds = new Set([...Object.keys(defaultKeys), ...Object.keys(customKeys)]);
 
   const entries: HotkeyEntry[] = [];
@@ -107,7 +68,7 @@ export function collectHotkeys(app: App): CategoryGroup[] {
     const cmd = commands[id];
     const name = cmd?.name ?? id;
 
-    // Normalise key strings to uppercase (task 1.5)
+    // Normalise key strings to uppercase
     const normalisedHotkeys: HotkeyBinding[] = hotkeys.map((hk) => ({
       modifiers: hk.modifiers,
       key: hk.key.toUpperCase(),
@@ -147,4 +108,42 @@ export function collectHotkeys(app: App): CategoryGroup[] {
     category,
     entries: groupMap.get(category)!,
   }));
+}
+
+/**
+ * Collect all assigned hotkeys from the Obsidian runtime, categorise them,
+ * sort them, and return an ordered list of category groups.
+ *
+ * Accesses `app.hotkeyManager.defaultKeys` and `app.hotkeyManager.customKeys`,
+ * which are undocumented internal properties. A runtime guard protects against
+ * future API changes.
+ */
+export function collectHotkeys(app: App): CategoryGroup[] {
+  // Runtime guard — these are undocumented internal properties
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const hm = (app as any).hotkeyManager as
+    | {
+        defaultKeys: Record<string, HotkeyBinding[]>;
+        customKeys: Record<string, HotkeyBinding[]>;
+      }
+    | undefined;
+
+  if (!hm?.defaultKeys || !hm?.customKeys) {
+    console.warn(
+      "[Hotkeys Cheatsheet] hotkeyManager.defaultKeys / customKeys unavailable — hotkey display is empty."
+    );
+    return [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const commands = (app as any).commands?.commands as
+    | Record<string, { id: string; name: string }>
+    | undefined;
+
+  if (!commands) {
+    console.warn("[Hotkeys Cheatsheet] app.commands.commands unavailable.");
+    return [];
+  }
+
+  return buildHotkeyGroups(hm.defaultKeys, hm.customKeys, commands);
 }

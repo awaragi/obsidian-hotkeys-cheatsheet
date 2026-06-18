@@ -8,8 +8,8 @@ import { t } from "./i18n";
 import { CheatsheetModal } from "./cheatsheetModal";
 
 export default class HotkeysCheatsheetPlugin extends Plugin {
-  settings: HotkeysCheatsheetSettings;
-  private ribbonEl: HTMLElement;
+  settings!: HotkeysCheatsheetSettings;
+  private ribbonEl!: HTMLElement;
 
   async onload() {
     await this.loadSettings();

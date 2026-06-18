@@ -8,19 +8,28 @@
     "build": "node esbuild.config.mjs production",
     "deploy": "node scripts/deploy.mjs",
     "dev:deploy": "npm run dev && npm run deploy",
+    "dev:deploy:watch": "watch 'npm run dev:deploy' src",
     "clean": "rm -rf dist",
+    "lint": "eslint src/ts",
+    "format": "prettier --write src/ts",
+    "test": "vitest run",
     "release:prepare": "node scripts/version.mjs",
     "release": "node scripts/publish.mjs"
   },
   "keywords": [],
   "author": "Pierre Awaragi",
   "license": "MIT",
-  "dependencies": {},
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.61.1",
+    "@typescript-eslint/parser": "^8.61.1",
     "builtin-modules": "^3.3.0",
-    "esbuild": "^0.21.0",
+    "esbuild": "^0.28.1",
+    "eslint": "^10.5.0",
     "obsidian": "latest",
-    "typescript": "^5.4.0"
+    "prettier": "^3.8.4",
+    "typescript": "^5.4.0",
+    "vitest": "^4.1.9",
+    "watch": "^0.13.0"
   }
 }

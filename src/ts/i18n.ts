@@ -13,9 +13,17 @@ function detectLocale(): string {
   return code in locales ? code : "en";
 }
 
-const strings: Partial<Translations> = locales[detectLocale()];
-
-export function t(key: keyof Translations, vars?: Record<string, string>): string {
+/**
+ * Pure translation function: looks up `key` in the given `locale` (falling
+ * back to English) and interpolates any `{{var}}` placeholders from `vars`.
+ * Does not read any globals — suitable for use in unit tests.
+ */
+export function translate(
+  key: keyof Translations,
+  locale: string,
+  vars?: Record<string, string>
+): string {
+  const strings: Partial<Translations> = locales[locale] ?? locales["en"];
   let str = (strings[key] ?? en[key]) as string;
   if (vars) {
     for (const [k, v] of Object.entries(vars)) {
@@ -23,6 +31,10 @@ export function t(key: keyof Translations, vars?: Record<string, string>): strin
     }
   }
   return str;
+}
+
+export function t(key: keyof Translations, vars?: Record<string, string>): string {
+  return translate(key, detectLocale(), vars);
 }
 
 export function locale(): string {
