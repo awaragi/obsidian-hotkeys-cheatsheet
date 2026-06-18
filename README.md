@@ -24,8 +24,7 @@ Obsidian's built-in hotkey settings show a flat alphabetical list of 250+ comman
 
 ### How to open it
 
-- Click the keyboard icon in the ribbon (left sidebar)
-- Or run **Open Hotkeys Cheatsheet** from the command palette (`Cmd P`)
+Click the keyboard icon in the ribbon (left sidebar).
 
 ### Keyboard behaviour
 

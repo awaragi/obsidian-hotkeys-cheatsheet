@@ -1,6 +1,4 @@
 {
-  "ribbon.tooltip": "Abrir hoja de referencia de atajos",
-  "command.name": "Abrir hoja de referencia de atajos",
   "modal.title": "Hoja de referencia de atajos",
   "modal.search_placeholder": "Buscar por nombre o tecla...",
   "modal.filter_label": "Modificadores",

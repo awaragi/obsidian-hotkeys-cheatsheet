@@ -1,6 +1,4 @@
 {
-  "ribbon.tooltip": "Ouvrir l'aide-mémoire des raccourcis",
-  "command.name": "Ouvrir l'aide-mémoire des raccourcis",
   "modal.title": "Aide-mémoire des raccourcis",
   "modal.search_placeholder": "Rechercher par nom ou touche...",
   "modal.filter_label": "Modificateurs",
