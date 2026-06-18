@@ -4,12 +4,12 @@
 /* ── Modal size override ─────────────────────────────────────────────────── */
 /* Applied to this.modalEl to make the modal fill most of the window. */
 
-.hkc-full-modal {
-  width: min(90vw, 1400px) !important;
-  min-width: min(560px, 90vw) !important;
-  height: min(85vh, 1000px) !important;
-  max-width: none !important;
-  max-height: none !important;
+.modal.hkc-full-modal {
+  width: min(90vw, 1400px);
+  min-width: min(560px, 90vw);
+  height: min(85vh, 1000px);
+  max-width: none;
+  max-height: none;
 }
 
 /* ── Content container ───────────────────────────────────────────────────── */

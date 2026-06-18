@@ -1,4 +1,4 @@
-import { App, Modal, setIcon, setTooltip } from "obsidian";
+import { App, Modal, setIcon } from "obsidian";
 import { collectHotkeys } from "./hotkeyCollector";
 import type { CategoryGroup } from "./types";
 import { t } from "./i18n";
@@ -61,11 +61,11 @@ export class CheatsheetModal extends Modal {
 
     this.groups = collectHotkeys(this.app);
     this.buildUI();
-    document.addEventListener("click", this.handleOutsideClick);
+    activeDocument.addEventListener("click", this.handleOutsideClick);
   }
 
   onClose() {
-    document.removeEventListener("click", this.handleOutsideClick);
+    activeDocument.removeEventListener("click", this.handleOutsideClick);
     this.contentEl.empty();
   }
 
@@ -81,7 +81,7 @@ export class CheatsheetModal extends Modal {
     this.gridEl = contentEl.createDiv({ cls: "hkc-grid" });
     this.renderGrid();
 
-    setTimeout(() => this.searchInput?.focus(), 30);
+    window.setTimeout(() => this.searchInput?.focus(), 30);
   }
 
   private buildToolbar(parent: HTMLElement) {
@@ -194,10 +194,10 @@ export class CheatsheetModal extends Modal {
       this.groups.every((g) => this.collapsedSections.has(g.category));
     if (allCollapsed) {
       setIcon(this.collapseToggleBtn, "chevrons-up-down");
-      setTooltip(this.collapseToggleBtn, t("modal.expand_all"));
+      this.collapseToggleBtn.setAttribute("aria-label", t("modal.expand_all"));
     } else {
       setIcon(this.collapseToggleBtn, "chevrons-down-up");
-      setTooltip(this.collapseToggleBtn, t("modal.collapse_all"));
+      this.collapseToggleBtn.setAttribute("aria-label", t("modal.collapse_all"));
     }
   }
 

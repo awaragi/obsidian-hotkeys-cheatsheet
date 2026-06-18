@@ -18,7 +18,7 @@ export class HotkeysCheatsheetSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: t("settings.heading") });
+    new Setting(containerEl).setName(t("settings.heading")).setHeading();
 
     new Setting(containerEl)
       .setName(t("settings.ribbon.label"))

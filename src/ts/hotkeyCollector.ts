@@ -110,6 +110,16 @@ export function buildHotkeyGroups(
   }));
 }
 
+interface ObsidianHotkeyManager {
+  defaultKeys: Record<string, HotkeyBinding[]>;
+  customKeys: Record<string, HotkeyBinding[]>;
+}
+
+interface AppWithInternals extends App {
+  hotkeyManager?: ObsidianHotkeyManager;
+  commands?: { commands: Record<string, { id: string; name: string }> };
+}
+
 /**
  * Collect all assigned hotkeys from the Obsidian runtime, categorise them,
  * sort them, and return an ordered list of category groups.
@@ -119,14 +129,7 @@ export function buildHotkeyGroups(
  * future API changes.
  */
 export function collectHotkeys(app: App): CategoryGroup[] {
-  // Runtime guard — these are undocumented internal properties
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const hm = (app as any).hotkeyManager as
-    | {
-        defaultKeys: Record<string, HotkeyBinding[]>;
-        customKeys: Record<string, HotkeyBinding[]>;
-      }
-    | undefined;
+  const hm = (app as AppWithInternals).hotkeyManager;
 
   if (!hm?.defaultKeys || !hm?.customKeys) {
     console.warn(
@@ -135,10 +138,7 @@ export function collectHotkeys(app: App): CategoryGroup[] {
     return [];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const commands = (app as any).commands?.commands as
-    | Record<string, { id: string; name: string }>
-    | undefined;
+  const commands = (app as AppWithInternals).commands?.commands;
 
   if (!commands) {
     console.warn("[Hotkeys Cheatsheet] app.commands.commands unavailable.");

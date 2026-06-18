@@ -143,9 +143,24 @@ To add a new language:
 
 ### Releases
 
-Push a version tag to trigger a GitHub Actions build and draft release:
+1. **Bump the version** — choose `patch`, `minor`, or `major`:
 
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
+   ```bash
+   npm run release:prepare patch
+   ```
+
+   Updates `package.json` and `manifest.json`, then commits both as `"chore: bump version to X.Y.Z"`.
+
+2. **Make your code changes** and commit them:
+
+   ```bash
+   git add -A && git commit -m "feat: ..."
+   ```
+
+3. **Publish** — pushes the branch, creates a bare version tag (e.g. `1.1.6`), and pushes the tag:
+
+   ```bash
+   npm run release
+   ```
+
+   The tag push triggers the GitHub Actions workflow, which builds and publishes the release.

@@ -26,14 +26,14 @@ export default class HotkeysCheatsheetPlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "open-hotkeys-cheatsheet",
+      id: "open",
       name: t("command.name"),
       callback: () => this.openCheatsheet(),
     });
   }
 
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<HotkeysCheatsheetSettings>);
   }
 
   async saveSettings() {

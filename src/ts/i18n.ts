@@ -24,7 +24,7 @@ export function translate(
   vars?: Record<string, string>
 ): string {
   const strings: Partial<Translations> = locales[locale] ?? locales["en"];
-  let str = (strings[key] ?? en[key]) as string;
+  let str = strings[key] ?? en[key];
   if (vars) {
     for (const [k, v] of Object.entries(vars)) {
       str = str.replaceAll(`{{${k}}}`, v);
