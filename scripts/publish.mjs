@@ -1,19 +1,15 @@
 import { execSync } from "child_process";
-import { currentVersion, bumpVersion, ROOT } from "./version.mjs";
+import { currentVersion, ROOT } from "./version.mjs";
 
 function run(cmd) {
   execSync(cmd, { cwd: ROOT, stdio: "inherit" });
 }
 
-const tag = `v${currentVersion()}`;
+const tag = currentVersion();
 
 console.log(`Tagging ${tag}`);
-run(`git tag ${tag}`);
-
-const next = bumpVersion("patch");
-console.log(`Bumped to ${next}`);
-
 run(`git push`);
+run(`git tag ${tag}`);
 run(`git push origin ${tag}`);
 
-console.log(`Released ${tag} — next version is ${next}`);
+console.log(`Released ${tag} — run 'npm run release:prepare patch' to start the next cycle`);
