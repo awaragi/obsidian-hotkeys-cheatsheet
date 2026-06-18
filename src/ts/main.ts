@@ -4,6 +4,7 @@ import {
   HotkeysCheatsheetSettings,
   HotkeysCheatsheetSettingTab,
 } from "./settingsTab";
+import { t } from "./i18n";
 import { CheatsheetModal } from "./cheatsheetModal";
 
 export default class HotkeysCheatsheetPlugin extends Plugin {
@@ -14,7 +15,7 @@ export default class HotkeysCheatsheetPlugin extends Plugin {
     await this.loadSettings();
     this.addSettingTab(new HotkeysCheatsheetSettingTab(this.app, this));
 
-    this.ribbonEl = this.addRibbonIcon("keyboard", "Open Hotkeys Cheatsheet", () => {
+    this.ribbonEl = this.addRibbonIcon("keyboard", t("ribbon.tooltip"), () => {
       this.openCheatsheet();
     });
 
@@ -22,6 +23,12 @@ export default class HotkeysCheatsheetPlugin extends Plugin {
       if (!this.settings.showRibbonIcon) {
         this.ribbonEl.hide();
       }
+    });
+
+    this.addCommand({
+      id: "open",
+      name: t("command.name"),
+      callback: () => this.openCheatsheet(),
     });
   }
 

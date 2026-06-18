@@ -1,4 +1,6 @@
 {
+  "ribbon.tooltip": "Open Hotkeys Cheatsheet",
+  "command.name": "Open Hotkeys Cheatsheet",
   "modal.title": "Hotkeys Cheatsheet",
   "modal.search_placeholder": "Search by name or key...",
   "modal.filter_label": "Modifiers",
