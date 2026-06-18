@@ -8,7 +8,7 @@ const locales: Record<string, Partial<Translations>> = { en, fr, es };
 
 function detectLocale(): string {
   // Obsidian exposes moment — its locale matches the app language setting
-  const lang = (window as any).moment?.locale() ?? navigator.language;
+  const lang = (window as Window & { moment?: { locale(): string } }).moment?.locale() ?? navigator.language;
   const code = lang.split("-")[0].toLowerCase();
   return code in locales ? code : "en";
 }

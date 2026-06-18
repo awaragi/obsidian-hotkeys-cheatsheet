@@ -43,7 +43,11 @@ export default class HotkeysCheatsheetPlugin extends Plugin {
   async setRibbonVisible(visible: boolean) {
     this.settings.showRibbonIcon = visible;
     await this.saveSettings();
-    visible ? this.ribbonEl.show() : this.ribbonEl.hide();
+    if (visible) {
+      this.ribbonEl.show();
+    } else {
+      this.ribbonEl.hide();
+    }
   }
 
   private openCheatsheet() {
