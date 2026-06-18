@@ -1,9 +1,9 @@
 {
   "id": "hotkeys-cheatsheet",
   "name": "Hotkeys Cheatsheet",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "minAppVersion": "1.0.0",
-  "description": "Display a searchable cheatsheet of all your Obsidian hotkeys.",
+  "description": "Display a searchable cheatsheet of all your hotkeys.",
   "author": "Pierre Awaragi",
   "authorUrl": "",
   "isDesktopOnly": false
