@@ -1,7 +1,7 @@
 {
   "id": "hotkeys-cheatsheet",
   "name": "Hotkeys Cheatsheet",
-  "version": "1.2.3",
+  "version": "1.3.0",
   "minAppVersion": "1.0.0",
   "description": "Display a searchable cheatsheet of all your hotkeys.",
   "author": "Pierre Awaragi",

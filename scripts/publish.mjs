@@ -7,6 +7,12 @@ function run(cmd) {
 
 const tag = currentVersion();
 
+const dirtyVersionFiles = execSync("git status --porcelain -- package.json manifest.json", { cwd: ROOT }).toString().trim();
+if (dirtyVersionFiles) {
+  console.error("Error: package.json or manifest.json have uncommitted changes. Commit the version bump before releasing.");
+  process.exit(1);
+}
+
 const existingTag = execSync("git tag --list " + tag, { cwd: ROOT }).toString().trim();
 if (existingTag === tag) {
   console.error(`Error: tag '${tag}' already exists. Run 'npm run release:prepare patch|minor|major' first.`);

@@ -26,7 +26,7 @@ export function currentVersion() {
   return JSON.parse(readFileSync(PKG_PATH, "utf-8")).version;
 }
 
-export function bumpVersion(type) {
+export function bumpVersion(type, { commit = false } = {}) {
   const pkg = JSON.parse(readFileSync(PKG_PATH, "utf-8"));
   const manifest = JSON.parse(readFileSync(MANIFEST_PATH, "utf-8"));
 
@@ -37,19 +37,23 @@ export function bumpVersion(type) {
   writeFileSync(PKG_PATH, JSON.stringify(pkg, null, 2) + "\n");
   writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2) + "\n");
 
-  run(`git add package.json manifest.json`);
-  run(`git commit -m "chore: bump version to ${next}"`);
+  if (commit) {
+    run(`git add package.json manifest.json`);
+    run(`git commit -m "chore: bump version to ${next}"`);
+  }
 
   return next;
 }
 
-// Run as standalone script: node scripts/version.mjs <major|minor|patch>
+// Run as standalone script: node scripts/version.mjs <major|minor|patch> [--commit]
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const type = process.argv[2];
+  const args = process.argv.slice(2);
+  const type = args.find((a) => !a.startsWith("--"));
+  const commit = args.includes("--commit");
   if (!type) {
-    console.error("Usage: node scripts/version.mjs <major|minor|patch>");
+    console.error("Usage: node scripts/version.mjs <major|minor|patch> [--commit]");
     process.exit(1);
   }
-  const next = bumpVersion(type);
-  console.log(`Bumped to ${next}`);
+  const next = bumpVersion(type, { commit });
+  console.log(`Bumped to ${next}${commit ? " (committed)" : ""}`);
 }

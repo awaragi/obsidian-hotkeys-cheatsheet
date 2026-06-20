@@ -120,6 +120,8 @@ Matching text in command names SHALL be highlighted. The matching key badge SHAL
 ### Requirement: Modifier filter dropdown narrows entries by modifier
 The modal toolbar SHALL include a modifier filter dropdown containing a checkbox for each of the four main modifier tokens: `Mod`, `Shift`, `Alt`, `Ctrl`. When one or more modifiers are checked, only hotkeys whose modifier set includes **all** checked modifiers SHALL be shown (AND logic). When no modifiers are checked, the filter is inactive and all hotkeys are shown. The modifier filter and search compose — both apply simultaneously.
 
+The filter button SHALL visually reflect the active selection state: when ≥1 modifier is checked, the button replaces its label with flat `<kbd>` chips (one per active modifier, in canonical order) and a `▾` chevron; when nothing is checked, the button shows the static localised label. See `modifier-filter-chip-display` spec for chip display requirements.
+
 #### Scenario: No modifiers checked shows all entries
 - **WHEN** no modifier checkboxes are checked
 - **THEN** all hotkey entries are visible (subject to search)

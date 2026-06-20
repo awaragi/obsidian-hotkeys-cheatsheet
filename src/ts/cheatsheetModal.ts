@@ -13,6 +13,7 @@ export class CheatsheetModal extends Modal {
   private activeModifiers: Set<string> = new Set();
 
   private searchInput!: HTMLInputElement;
+  private filterBtn!: HTMLButtonElement;
   private filterDropdown!: HTMLElement;
   private filterOpen = false;
   private gridEl!: HTMLElement;
@@ -101,6 +102,7 @@ export class CheatsheetModal extends Modal {
       this.searchInput.value = "";
       this.searchInput.focus();
       clearBtn.addClass("hkc-hidden");
+      this.searchInput.classList.remove("hkc-search--active");
       this.searchQuery = "";
       this.restoreSnapshot();
       this.updateToolbarState();
@@ -112,6 +114,7 @@ export class CheatsheetModal extends Modal {
       this.searchQuery = this.searchInput.value;
 
       clearBtn.toggleClass("hkc-hidden", this.searchQuery === "");
+      this.searchInput.classList.toggle("hkc-search--active", this.searchQuery !== "");
 
       if (prev === "" && this.searchQuery !== "") {
         this.searchSnapshot = new Set(this.collapsedSections);
@@ -125,7 +128,7 @@ export class CheatsheetModal extends Modal {
 
     // Modifier filter
     const filterWrapper = toolbar.createDiv({ cls: "hkc-filter-wrapper" });
-    const filterBtn = filterWrapper.createEl("button", {
+    this.filterBtn = filterWrapper.createEl("button", {
       text: t("modal.filter_label"),
       cls: "hkc-filter-btn",
     });
@@ -147,11 +150,12 @@ export class CheatsheetModal extends Modal {
         } else {
           this.activeModifiers.delete(mod);
         }
+        this.updateFilterBtn();
         this.renderGrid();
       });
     }
 
-    filterBtn.addEventListener("click", (e) => {
+    this.filterBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       this.filterOpen = !this.filterOpen;
       this.filterDropdown.toggleClass("hkc-hidden", !this.filterOpen);
@@ -213,6 +217,23 @@ export class CheatsheetModal extends Modal {
     this.restoreSnapshot();
     this.updateToolbarState();
     this.renderGrid();
+  }
+
+  private updateFilterBtn() {
+    const btn = this.filterBtn;
+    btn.empty();
+    if (this.activeModifiers.size === 0) {
+      btn.setText(t("modal.filter_label"));
+      btn.removeClass("hkc-filter-btn--active");
+    } else {
+      for (const mod of ["Mod", "Shift", "Alt", "Ctrl"] as const) {
+        if (this.activeModifiers.has(mod)) {
+          btn.createEl("kbd", { text: filterLabel(mod), cls: "hkc-filter-chip" });
+        }
+      }
+      btn.createSpan({ text: " ▾" });
+      btn.addClass("hkc-filter-btn--active");
+    }
   }
 
   // ── Grid Rendering ────────────────────────────────────────────────────────
