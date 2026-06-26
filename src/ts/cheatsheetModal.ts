@@ -1,9 +1,13 @@
-import { App, Modal, setIcon } from "obsidian";
+import { App, Modal, Notice, setIcon, TFile } from "obsidian";
 import { collectHotkeys } from "./hotkeyCollector";
 import type { CategoryGroup } from "./types";
 import { t } from "./i18n";
 import { modLabel, filterLabel, keyIcon } from "./keyDisplay";
 import { matchesFilters } from "./filterHotkeys";
+import { fillTemplate, renderHtmlSections } from "./htmlExportTemplate";
+
+const EXPORT_FILENAME = "Hotkeys Cheatsheet.md";
+const EXPORT_HTML_FILENAME = "Hotkeys Cheatsheet.html";
 
 // ── Modal ─────────────────────────────────────────────────────────────────
 
@@ -16,6 +20,10 @@ export class CheatsheetModal extends Modal {
   private filterBtn!: HTMLButtonElement;
   private filterDropdown!: HTMLElement;
   private filterOpen = false;
+  private exportBtn!: HTMLButtonElement;
+  private exportDropdown!: HTMLElement;
+  private exportOpen = false;
+  private pendingOverwrite = false;
   private gridEl!: HTMLElement;
 
   private collapseToggleBtn!: HTMLButtonElement;
@@ -32,6 +40,10 @@ export class CheatsheetModal extends Modal {
     if (this.filterOpen && !this.filterDropdown.contains(e.target as Node)) {
       this.filterOpen = false;
       this.filterDropdown.addClass("hkc-hidden");
+    }
+    if (this.exportOpen && !this.exportDropdown.contains(e.target as Node)) {
+      this.exportOpen = false;
+      this.exportDropdown.addClass("hkc-hidden");
     }
   };
 
@@ -59,6 +71,7 @@ export class CheatsheetModal extends Modal {
     // Reset collapse state on every open
     this.collapsedSections = new Set();
     this.searchSnapshot = null;
+    this.pendingOverwrite = false;
 
     this.groups = collectHotkeys(this.app);
     this.buildUI();
@@ -67,6 +80,7 @@ export class CheatsheetModal extends Modal {
 
   onClose() {
     activeDocument.removeEventListener("click", this.handleOutsideClick);
+    this.pendingOverwrite = false;
     this.contentEl.empty();
   }
 
@@ -87,6 +101,40 @@ export class CheatsheetModal extends Modal {
 
   private buildToolbar(parent: HTMLElement) {
     const toolbar = parent.createDiv({ cls: "hkc-toolbar" });
+
+    // Export dropdown — leftmost
+    const exportWrapper = toolbar.createDiv({ cls: "hkc-export-wrapper" });
+    this.exportBtn = exportWrapper.createEl("button", { cls: "hkc-export-btn" });
+    setIcon(this.exportBtn, "download");
+    this.exportBtn.setAttribute("aria-label", t("modal.export_label"));
+    this.exportDropdown = exportWrapper.createDiv({
+      cls: "hkc-export-dropdown hkc-hidden",
+    });
+
+    const saveNoteItem = this.exportDropdown.createDiv({ cls: "hkc-export-item" });
+    saveNoteItem.setText(t("modal.export_save_note"));
+    saveNoteItem.addEventListener("click", () => {
+      this.exportOpen = false;
+      this.exportDropdown.addClass("hkc-hidden");
+      this.exportNote();
+    });
+
+    const saveHtmlItem = this.exportDropdown.createDiv({ cls: "hkc-export-item" });
+    saveHtmlItem.setText(t("modal.export_save_html"));
+    saveHtmlItem.addEventListener("click", () => {
+      this.exportOpen = false;
+      this.exportDropdown.addClass("hkc-hidden");
+      this.saveHtml();
+    });
+
+    this.exportBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.exportOpen = !this.exportOpen;
+      this.exportDropdown.toggleClass("hkc-hidden", !this.exportOpen);
+      if (this.exportOpen) this.searchInput.focus();
+    });
+
+    this.exportDropdown.addEventListener("click", (e) => e.stopPropagation());
 
     // Search input wrapper
     const searchWrapper = toolbar.createDiv({ cls: "hkc-search-wrapper" });
@@ -234,6 +282,78 @@ export class CheatsheetModal extends Modal {
       btn.createSpan({ text: " ▾" });
       btn.addClass("hkc-filter-btn--active");
     }
+  }
+
+  // ── Export ────────────────────────────────────────────────────────────────
+
+  private generateMarkdown(): string {
+    const today = new Date().toISOString().slice(0, 10);
+    const lines: string[] = [
+      `# ${t("modal.title")}`,
+      ``,
+      `*${t("modal.export_subtitle", { date: today })}*`,
+    ];
+    for (const group of this.groups) {
+      lines.push(``, `## ${group.category}`, ``);
+      lines.push(`| Command | Hotkey |`);
+      lines.push(`|---------|--------|`);
+      for (const entry of group.entries) {
+        const hotkeyStr = entry.hotkeys
+          .map((hk) => {
+            const parts = [...hk.modifiers.map(modLabel), keyIcon(hk.key)];
+            return parts.map((p) => `\`${p}\``).join(" + ");
+          })
+          .join(" / ");
+        lines.push(`| ${entry.name} | ${hotkeyStr} |`);
+      }
+    }
+    return lines.join("\n");
+  }
+
+  private async exportNote() {
+    const folder = this.app.workspace.getActiveFile()?.parent?.path ?? "/";
+    const path = folder === "/" ? EXPORT_FILENAME : `${folder}/${EXPORT_FILENAME}`;
+    const existing = this.app.vault.getAbstractFileByPath(path);
+
+    if (existing instanceof TFile && !this.pendingOverwrite) {
+      this.pendingOverwrite = true;
+      new Notice(t("modal.export_exists", { path }), 5000);
+      return;
+    }
+
+    const content = this.generateMarkdown();
+    try {
+      let savedFile: TFile;
+      if (existing instanceof TFile) {
+        await this.app.vault.modify(existing, content);
+        savedFile = existing;
+      } else {
+        savedFile = await this.app.vault.create(path, content);
+      }
+      this.pendingOverwrite = false;
+      super.close();
+      await this.app.workspace.getLeaf().openFile(savedFile);
+    } catch (err) {
+      new Notice(`Export failed: ${String(err)}`);
+    }
+  }
+
+  private generateHtml(): string {
+    const title = t("modal.title");
+    const date = new Date().toISOString().slice(0, 10);
+    const content = renderHtmlSections(this.groups);
+    return fillTemplate(title, date, content);
+  }
+
+  private saveHtml(): void {
+    const html = this.generateHtml();
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = EXPORT_HTML_FILENAME;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   // ── Grid Rendering ────────────────────────────────────────────────────────

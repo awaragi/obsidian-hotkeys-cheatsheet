@@ -214,3 +214,50 @@ All colours, spacing, and typography in the modal SHALL use Obsidian CSS custom 
 #### Scenario: Modal matches dark theme
 - **WHEN** Obsidian is using a dark theme
 - **THEN** the modal background and text colours match the theme
+
+---
+
+### Requirement: Toolbar includes an Export dropdown button
+The modal toolbar SHALL include an icon-only Export button (leftmost position in the toolbar) that opens a dropdown menu with two items: "Save as Note" and "Save as HTML". The dropdown SHALL follow the same outside-click-to-dismiss pattern as the modifier filter dropdown. When the dropdown opens, focus SHALL move to the search input.
+
+#### Scenario: Export button opens dropdown
+- **WHEN** the user clicks the Export button in the toolbar
+- **THEN** a dropdown appears with two items: "Save as Note" and "Save as HTML"
+
+#### Scenario: Dropdown closes on outside click
+- **WHEN** the export dropdown is open and the user clicks anywhere outside it
+- **THEN** the dropdown closes
+
+#### Scenario: Export button is leftmost in toolbar
+- **WHEN** the modal is open
+- **THEN** the Export button appears at the far left of the toolbar, before the search input
+
+#### Scenario: Opening dropdown focuses search input
+- **WHEN** the user clicks the Export button to open the dropdown
+- **THEN** focus moves to the search input
+
+---
+
+### Requirement: "Save as Note" triggers note export
+The "Save as Note" item in the export dropdown SHALL be active and clickable. Clicking it SHALL close the dropdown and trigger the note export flow defined in the `note-export` capability.
+
+#### Scenario: Save as Note item is interactive
+- **WHEN** the export dropdown is open
+- **THEN** "Save as Note" is visually enabled and responds to click
+
+#### Scenario: Clicking Save as Note triggers export
+- **WHEN** the user clicks "Save as Note"
+- **THEN** the dropdown closes and the note export process begins
+
+---
+
+### Requirement: "Save as HTML" triggers HTML export
+The "Save as HTML" item in the export dropdown SHALL be active and clickable. Clicking it SHALL close the dropdown and trigger the HTML export flow defined in the `html-export` capability.
+
+#### Scenario: Save as HTML item is interactive
+- **WHEN** the export dropdown is open
+- **THEN** "Save as HTML" is visually enabled and responds to click
+
+#### Scenario: Clicking Save as HTML triggers export
+- **WHEN** the user clicks "Save as HTML"
+- **THEN** the dropdown closes and the HTML export and download process begins

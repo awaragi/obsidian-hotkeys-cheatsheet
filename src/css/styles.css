@@ -169,6 +169,71 @@
   cursor: pointer;
 }
 
+/* ── Export Dropdown ─────────────────────────────────────────────────────── */
+
+.hkc-export-wrapper {
+  position: relative;
+}
+
+.hkc-export-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-s);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  width: 28px;
+  height: 28px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.hkc-export-btn:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+.hkc-export-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 100;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-s);
+  padding: 6px 0;
+  min-width: 200px;
+}
+
+.hkc-export-dropdown.hkc-hidden {
+  display: none;
+}
+
+.hkc-export-item {
+  display: flex;
+  align-items: center;
+  padding: 5px 14px;
+  cursor: pointer;
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+  user-select: none;
+  transition: background 0.1s;
+}
+
+.hkc-export-item:hover {
+  background: var(--background-modifier-hover);
+}
+
+.hkc-export-item--disabled {
+  color: var(--text-faint);
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
 /* ── Category Grid ───────────────────────────────────────────────────────── */
 
 .hkc-grid {
