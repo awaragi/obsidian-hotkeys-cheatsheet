@@ -26,7 +26,10 @@ export class HotkeysCheatsheetSettingTab extends PluginSettingTab {
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.showRibbonIcon)
-          .onChange((value) => this.plugin.setRibbonVisible(value))
+          .onChange(async (value) => {
+          this.plugin.settings.showRibbonIcon = value;
+          await this.plugin.saveSettings();
+        })
       );
 
     const about = containerEl.createDiv({ cls: "hkc-about" });

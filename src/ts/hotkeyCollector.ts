@@ -40,6 +40,12 @@ export function categorise(id: string, displayName: string): string {
   return "Other";
 }
 
+/** Strip "Category: " prefix from a command display name if present. */
+export function stripCategoryPrefix(name: string, category: string): string {
+  const prefix = category + ": ";
+  return name.startsWith(prefix) ? name.slice(prefix.length) : name;
+}
+
 /**
  * Pure function: merge, normalize, categorize, group, and sort hotkey data
  * into an ordered list of category groups.
@@ -66,7 +72,9 @@ export function buildHotkeyGroups(
     if (hotkeys.length === 0) continue;
 
     const cmd = commands[id];
-    const name = cmd?.name ?? id;
+    const rawName = cmd?.name ?? id;
+    const category = categorise(id, rawName);
+    const name = stripCategoryPrefix(rawName, category);
 
     // Normalise key strings to uppercase
     const normalisedHotkeys: HotkeyBinding[] = hotkeys.map((hk) => ({
@@ -77,7 +85,7 @@ export function buildHotkeyGroups(
     entries.push({
       id,
       name,
-      category: categorise(id, name),
+      category,
       hotkeys: normalisedHotkeys,
     });
   }

@@ -9,7 +9,7 @@
   "modal.no_results": "Aucun résultat",
   "settings.heading": "Aide-mémoire des raccourcis",
   "settings.ribbon.label": "Afficher l'icône dans le ruban",
-  "settings.ribbon.desc": "Affiche l'icône clavier dans la barre de ruban.",
+  "settings.ribbon.desc": "Affiche l'icône clavier dans la barre de ruban. Prend effet après le rechargement d'Obsidian.",
   "settings.about.name": "Aide-mémoire des raccourcis",
   "settings.about.description": "Affiche une fiche de référence en direct, catégorisée et consultable de vos raccourcis Obsidian.",
   "settings.about.author": "Pierre Awaragi"

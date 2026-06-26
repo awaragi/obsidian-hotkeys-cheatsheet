@@ -72,6 +72,19 @@ The collector SHALL return categories in the following order: Editing, Navigatio
 
 ---
 
+### Requirement: Strip redundant category prefix from display name
+When the raw command display name begins with `"<category>: "`, that prefix SHALL be stripped before the entry is stored. This prevents redundant repetition of the plugin/category name in the command label when it is already shown as the section heading.
+
+#### Scenario: Plugin name prefix stripped from command name
+- **WHEN** the command name is `"My Plugin: Open My Plugin"` and the derived category is `"My Plugin"`
+- **THEN** the stored display name is `"Open My Plugin"`
+
+#### Scenario: Name without matching prefix is unchanged
+- **WHEN** the command name does not start with `"<category>: "`
+- **THEN** the display name is stored as-is
+
+---
+
 ### Requirement: Normalise key display values
 The collector SHALL normalise the `key` field of each hotkey to uppercase before returning. Commands with `modifiers: []` (bare keys such as F1, F2) SHALL be included and treated as valid single-key bindings.
 

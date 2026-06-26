@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { toTitleCase, categorise, buildHotkeyGroups } from "./hotkeyCollector";
+import { toTitleCase, categorise, stripCategoryPrefix, buildHotkeyGroups } from "./hotkeyCollector";
 
 describe("toTitleCase", () => {
   it("capitalises first letter of each word split on hyphen", () => {
@@ -38,6 +38,20 @@ describe("categorise", () => {
 
   it("returns Other when no colon and no display name separator", () => {
     expect(categorise("somecommand", "Just a command")).toBe("Other");
+  });
+});
+
+describe("stripCategoryPrefix", () => {
+  it("strips matching category prefix", () => {
+    expect(stripCategoryPrefix("My Plugin: Do Thing", "My Plugin")).toBe("Do Thing");
+  });
+
+  it("leaves name unchanged when prefix does not match", () => {
+    expect(stripCategoryPrefix("Toggle Bold", "Editing")).toBe("Toggle Bold");
+  });
+
+  it("leaves name unchanged when it only partially matches", () => {
+    expect(stripCategoryPrefix("My Plugin Do Thing", "My Plugin")).toBe("My Plugin Do Thing");
   });
 });
 
@@ -115,5 +129,13 @@ describe("buildHotkeyGroups", () => {
     const customKeys = {};
     const groups = buildHotkeyGroups(defaultKeys, customKeys, {});
     expect(groups[0].entries[0].name).toBe("unknown:cmd");
+  });
+
+  it("strips plugin name prefix from command display name", () => {
+    const cmds = {
+      "my-plugin:open": { id: "my-plugin:open", name: "My Plugin: Open My Plugin" },
+    };
+    const groups = buildHotkeyGroups({ "my-plugin:open": [{ modifiers: ["Mod"], key: "p" }] }, {}, cmds);
+    expect(groups[0].entries[0].name).toBe("Open My Plugin");
   });
 });

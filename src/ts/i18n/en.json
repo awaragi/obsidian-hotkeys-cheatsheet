@@ -9,7 +9,7 @@
   "modal.no_results": "No results",
   "settings.heading": "Hotkeys Cheatsheet",
   "settings.ribbon.label": "Show ribbon icon",
-  "settings.ribbon.desc": "Display the keyboard icon in the ribbon toolbar.",
+  "settings.ribbon.desc": "Display the keyboard icon in the ribbon toolbar. Takes effect after reloading Obsidian.",
   "settings.about.name": "Hotkeys Cheatsheet",
   "settings.about.description": "Display a live, categorised, searchable reference card of your Obsidian hotkeys.",
   "settings.about.author": "Pierre Awaragi"
