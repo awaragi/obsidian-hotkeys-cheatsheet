@@ -6,7 +6,7 @@ A live, searchable reference card for all your Obsidian keyboard shortcuts — o
 
 Obsidian's built-in hotkey settings show a flat alphabetical list of 250+ commands. This plugin gives you a visual overview instead: a newspaper-style multi-column layout with every shortcut you have assigned, complete with `Cmd`, `Shift`, `Option`, `Ctrl` key badges rendered for your OS.
 
-![Hotkeys Cheatsheet modal](docs/screenshot-01.png)
+![Hotkeys Cheatsheet modal](docs/screenshot.png)
 
 ### Features
 
