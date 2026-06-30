@@ -17,10 +17,13 @@ Obsidian's built-in hotkey settings show a flat alphabetical list of 250+ comman
 - **Real-time search** — filter by command name or key character (type `b` to find all `Cmd B`, `Cmd Shift B`, etc.); collapsed sections auto-expand while searching and restore when cleared
 - **Search clear button** — `×` button inside the search field clears the query instantly
 - **Modifier filter** — dropdown to show only hotkeys that include specific modifiers (AND logic: select Cmd + Shift to find all `Cmd Shift` combos)
+- **Modifier filter chips** — active modifier filters are shown directly on the filter button as flat `<kbd>` chips
+- **Export menu** — toolbar export dropdown lets you save the cheatsheet as a note or export it as HTML
 - **OS-aware badges** — `Cmd`/`Option` on macOS, `Ctrl`/`Alt`/`Win` on Windows/Linux
 - **Special key icons** — arrow keys show ↑↓←→, Enter shows ↵, Backspace shows ⌫, Tab shows ⇥, etc.
 - **Theme-compatible** — uses Obsidian CSS variables, works with any light or dark theme
 - **Ribbon toggle** — hide or show the ribbon icon from Settings; the command palette entry always remains available
+- **Header close button** — close the modal with the `✕` button in the header
 
 ### How to open it
 
@@ -34,6 +37,13 @@ Obsidian's built-in hotkey settings show a flat alphabetical list of 250+ comman
 | `Escape` (search active) | Clears the search input and restores pre-search collapse state |
 | `Escape` (search empty) | Closes the modal |
 
+### Export options
+
+Use the **Export** button in the modal toolbar to save the current cheatsheet in either format:
+
+- **Save as Note** — creates an Obsidian note version of the cheatsheet
+- **Save as HTML** — exports the cheatsheet as an HTML file
+
 ---
 
 ## Settings
@@ -42,7 +52,7 @@ Open **Settings → Hotkeys Cheatsheet** to configure:
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| Show ribbon icon | On | Toggles the keyboard icon in the ribbon toolbar. Takes effect immediately without restarting Obsidian. The command palette entry is unaffected. |
+| Show ribbon icon | On | Toggles whether the keyboard icon appears in the ribbon on startup. If disabled, the command palette entry still opens the cheatsheet. |
 
 ---
 
@@ -84,7 +94,7 @@ npm run clean
 
 ### Project structure
 
-```
+```text
 src/
 ├── ts/
 │   ├── main.ts              Plugin entry point — ribbon icon, command, ribbon visibility setting
