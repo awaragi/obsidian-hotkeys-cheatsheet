@@ -23,7 +23,7 @@
   "settings.ribbon.label": "Show ribbon icon",
   "settings.ribbon.desc": "Display the keyboard icon in the ribbon toolbar. Takes effect after reloading Obsidian.",
   "settings.usage_tracking.label": "Track shortcut usage",
-  "settings.usage_tracking.desc": "Record how often each shortcut is pressed and show usage indicators in the cheatsheet. Off by default.",
+  "settings.usage_tracking.desc": "Record how often each modifier+key combination is pressed anywhere in the app, and show usage indicators in the cheatsheet. Not limited to recognized hotkeys. Off by default.",
   "settings.usage_tracking.reset_label": "Reset usage statistics",
   "settings.usage_tracking.reset_desc": "Clear all recorded shortcut usage counts. This cannot be undone.",
   "settings.usage_tracking.reset_confirm": "Click again to confirm: this will permanently clear all recorded shortcut usage.",

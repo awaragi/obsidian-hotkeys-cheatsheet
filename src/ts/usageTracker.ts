@@ -50,6 +50,34 @@ export function parseSignature(signature: string): { modifiers: string[]; key: s
 }
 
 /**
+ * True if `key` is a single ASCII letter or digit — the only single-character
+ * `evt.key` values a real shortcut press should ever produce; anything else
+ * single-character is either punctuation or a composed/accented character.
+ */
+function isAsciiAlnum(key: string): boolean {
+  if (key.length !== 1) return false;
+  const code = key.charCodeAt(0);
+  return (code >= 48 && code <= 57) || (code >= 65 && code <= 90) || (code >= 97 && code <= 122);
+}
+
+/**
+ * On macOS, Option (Alt) doubles as the compose modifier for accented/special
+ * characters on many non-US layouts — e.g. on a Canadian CSA layout, Option+S
+ * produces "ß" and Option+A produces "æ" directly, with no intermediate "Dead"
+ * state. macOS only composes this way when Option is held without Cmd/Ctrl
+ * (those combinations are treated as app shortcuts, not text input), so this
+ * only applies when Alt is the sole non-Shift qualifying modifier. Any
+ * resulting single character outside plain ASCII letters/digits is ordinary
+ * composed text, not a shortcut — trading off the rare genuine Alt+letter
+ * hotkey invocation that happens to compose on a given layout, in exchange for
+ * not polluting usage counts with everyday accented-character typing.
+ */
+function isComposedAltCharacter(evt: KeyboardEvent): boolean {
+  if (!evt.altKey || evt.ctrlKey || evt.metaKey) return false;
+  return evt.key.length === 1 && !isAsciiAlnum(evt.key);
+}
+
+/**
  * Pure filter + canonicalisation for a raw keydown event. Returns null for
  * modifier-only keys, repeat events, and events that aren't a good shortcut
  * candidate — a bare key (Escape, Enter, arrows, ...) is indistinguishable
@@ -59,6 +87,10 @@ export function parseSignature(signature: string): { modifiers: string[]; key: s
 export function canonicaliseKeydown(evt: KeyboardEvent): string | null {
   if (evt.repeat) return null;
   if (MODIFIER_KEYS.has(evt.key)) return null;
+  // "Dead" is an intermediate composition state (e.g. Option/Alt used to type an
+  // accented character on international layouts), not a shortcut candidate.
+  if (evt.key === "Dead") return null;
+  if (isComposedAltCharacter(evt)) return null;
 
   const hasModifier = evt.ctrlKey || evt.metaKey || evt.altKey;
   if (!hasModifier) return null;
@@ -82,16 +114,31 @@ function getUsageFilePath(pluginDir: string): string {
 async function writeUsageData(): Promise<void> {
   if (!appRef || !usageFilePath) return;
   const data: UsageData = { version: 1, counts: { ...counters } };
-  await appRef.vault.adapter.write(usageFilePath, JSON.stringify(data));
+  try {
+    await appRef.vault.adapter.write(usageFilePath, JSON.stringify(data));
+  } catch (err) {
+    console.error("[Hotkeys Cheatsheet] Failed to write usage data:", err);
+  }
 }
 
-/** Reads the usage data file at startup, tolerating a missing file (→ empty counters). */
-export async function loadUsageData(app: App, pluginDir: string): Promise<void> {
+/**
+ * Reads the usage data file at startup, tolerating a missing file (→ empty counters).
+ * Returns whether persistence is available (i.e. `pluginDir` was provided) — when
+ * `false`, `writeUsageData` will always no-op, so capture should not be started.
+ */
+export async function loadUsageData(app: App, pluginDir: string | undefined): Promise<boolean> {
   appRef = app;
+  counters = {};
+
+  if (!pluginDir) {
+    usageFilePath = null;
+    flushDebounced = null;
+    return false;
+  }
+
   usageFilePath = getUsageFilePath(pluginDir);
   flushDebounced = debounce(() => void writeUsageData(), FLUSH_INTERVAL_MS, false);
 
-  counters = {};
   if (await appRef.vault.adapter.exists(usageFilePath)) {
     try {
       const parsed = JSON.parse(await appRef.vault.adapter.read(usageFilePath)) as UsageData;
@@ -100,6 +147,7 @@ export async function loadUsageData(app: App, pluginDir: string): Promise<void> 
       counters = {};
     }
   }
+  return true;
 }
 
 /** Returns a snapshot of the current in-memory usage counts. */

@@ -58,6 +58,7 @@ import {
   getUsageCounts,
   increment,
   resetUsageData,
+  flushUsageData,
 } from "./usageTracker";
 import type { App, DataAdapter } from "obsidian";
 import { Platform } from "obsidian";
@@ -170,6 +171,37 @@ describe("canonicaliseKeydown", () => {
     expect(canonicaliseKeydown(evt)).toBeNull();
   });
 
+  it("ignores a Dead key from composing an accented character on international layouts", () => {
+    const evt = makeEvent({ altKey: true, key: "Dead" });
+    expect(canonicaliseKeydown(evt)).toBeNull();
+  });
+
+  it("ignores a single-step Option-composed character on a Canadian CSA layout (Option+S -> ß)", () => {
+    const evt = makeEvent({ altKey: true, key: "ß" });
+    expect(canonicaliseKeydown(evt)).toBeNull();
+  });
+
+  it("ignores a single-step Option-composed character (Option+A -> æ)", () => {
+    const evt = makeEvent({ altKey: true, key: "æ" });
+    expect(canonicaliseKeydown(evt)).toBeNull();
+  });
+
+  it("ignores an Option-composed symbol that happens to be plain ASCII (Option+2 -> @ on some layouts)", () => {
+    const evt = makeEvent({ altKey: true, key: "@" });
+    expect(canonicaliseKeydown(evt)).toBeNull();
+  });
+
+  it("still captures a plain Alt+letter combo (no composition involved)", () => {
+    const evt = makeEvent({ altKey: true, key: "b" });
+    expect(canonicaliseKeydown(evt)).toBe("Alt+B");
+  });
+
+  it("still captures Cmd+Alt combos, since macOS does not compose text while Cmd is held", () => {
+    platform.isMacOS = true;
+    const evt = makeEvent({ metaKey: true, altKey: true, key: "ß" });
+    expect(canonicaliseKeydown(evt)).toBe("Mod+Alt+SS");
+  });
+
   it("produces a consistent signature for repeated identical presses", () => {
     const evt = makeEvent({ ctrlKey: true, key: "b" });
     expect(canonicaliseKeydown(evt)).toBe(canonicaliseKeydown(evt));
@@ -191,6 +223,65 @@ describe("loadUsageData", () => {
     });
     await loadUsageData(makeApp(adapter), "plugins/hotkeys-cheatsheet");
     expect(getUsageCounts()).toEqual({ "Mod+B": 3 });
+  });
+
+  it("resolves true when a plugin directory is provided", async () => {
+    const adapter = makeAdapter();
+    const available = await loadUsageData(makeApp(adapter), "plugins/hotkeys-cheatsheet");
+    expect(available).toBe(true);
+  });
+
+  it("resolves false and resets counters when no plugin directory is available", async () => {
+    const adapter = makeAdapter();
+    const available = await loadUsageData(makeApp(adapter), undefined);
+    expect(available).toBe(false);
+    expect(getUsageCounts()).toEqual({});
+    expect(adapter.exists).not.toHaveBeenCalled();
+  });
+});
+
+describe("write failure handling", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("flushUsageData logs and does not throw when the adapter write rejects", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const adapter = makeAdapter({ write: vi.fn().mockRejectedValue(new Error("disk full")) });
+    await loadUsageData(makeApp(adapter), "plugins/hotkeys-cheatsheet");
+
+    await expect(flushUsageData()).resolves.toBeUndefined();
+    expect(consoleError).toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+
+  it("resetUsageData logs and does not throw when the adapter write rejects", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const adapter = makeAdapter({ write: vi.fn().mockRejectedValue(new Error("disk full")) });
+    await loadUsageData(makeApp(adapter), "plugins/hotkeys-cheatsheet");
+    increment("Mod+B");
+
+    await expect(resetUsageData()).resolves.toBeUndefined();
+    expect(getUsageCounts()).toEqual({});
+    expect(consoleError).toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+
+  it("a rejecting debounced flush does not produce an unhandled rejection", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const adapter = makeAdapter({ write: vi.fn().mockRejectedValue(new Error("disk full")) });
+    await loadUsageData(makeApp(adapter), "plugins/hotkeys-cheatsheet");
+
+    increment("Mod+B");
+    await vi.advanceTimersByTimeAsync(5000);
+
+    expect(adapter.write).toHaveBeenCalledTimes(1);
+    expect(consoleError).toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 });
 

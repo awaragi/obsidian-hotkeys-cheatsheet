@@ -1,8 +1,4 @@
-## Purpose
-
-Opt-in capture of raw hotkey-signature press counts: a settings toggle, a capture-phase keydown listener that canonicalises presses into modifier+key signatures (independent of any specific command), debounced persistence to a dedicated data file separate from plugin settings, and a reset action. Does not resolve signatures to commands or expose any stats UI — that is left to a future change.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Usage tracking is disabled by default and user-configurable
 The settings tab SHALL provide a toggle, `trackShortcutUsage`, to enable or disable shortcut usage capture. The field SHALL default to `false` when no stored value exists. Capture SHALL only be active while the setting is `true`. The setting's description text SHALL disclose that capture applies to any `Ctrl`/`Cmd`/`Alt`+key combination pressed anywhere in the application while enabled, not only to combinations that match a recognized Obsidian command hotkey.
@@ -22,6 +18,8 @@ The settings tab SHALL provide a toggle, `trackShortcutUsage`, to enable or disa
 #### Scenario: Setting description discloses global capture scope
 - **WHEN** the user views the "Track shortcut usage" setting description
 - **THEN** the text states that capture records any held-modifier key combination pressed anywhere in the app, not just recognized Obsidian hotkeys
+
+---
 
 ### Requirement: Captured keydown events are filtered to shortcut-like combinations
 The capture listener SHALL only record an event when at least one of `Ctrl`, `Meta`/`Mod`, or `Alt` is held. Events where `key` is itself a modifier, or where `repeat` is `true`, SHALL be ignored. A bare (no-modifier) key press — including keys like `Escape`, `Enter`, `Tab`, `Backspace`, arrows, and function keys — SHALL NOT be recorded: these are indistinguishable from normal typing/navigation/UI-dismissal and would only add noise, not a meaningful shortcut-usage signal.
@@ -60,16 +58,7 @@ Composed/accented character input via Option (Alt) on international keyboard lay
 - **WHEN** the user presses a combination that holds Alt together with Ctrl or Meta/Mod (e.g. `Cmd+Alt+K`)
 - **THEN** the press is recorded normally, since macOS does not compose text in that case
 
-### Requirement: Captured presses are stored as canonical signatures, not command IDs
-Each recorded press SHALL be converted to a canonical string signature composed of held modifiers in a fixed order (`Mod`, `Ctrl`, `Meta`, `Shift`, `Alt`) followed by the uppercased key, with no lookup against `hotkeyManager` or any command performed at capture time.
-
-#### Scenario: Signature is command-agnostic
-- **WHEN** a qualifying press is captured
-- **THEN** the stored data contains only the modifier+key signature, with no command ID or name attached
-
-#### Scenario: Same physical combination always yields the same signature
-- **WHEN** the same modifier+key combination is pressed multiple times
-- **THEN** each press increments the count for the same signature string
+---
 
 ### Requirement: Usage counts persist to a dedicated data file, separate from plugin settings
 Usage counts SHALL be persisted as `{ version: 1, counts: Record<string, number> }` to a file dedicated to usage data, distinct from the settings data file, using the vault adapter. Writes SHALL be debounced/throttled so that continuous input does not cause a write per keystroke. A failure to write the usage data file (e.g. disk full, permission error, sync conflict) SHALL be caught and logged rather than surfacing as an unhandled promise rejection or an uncaught exception to any caller (the debounced flush, plugin unload, or the settings "Reset usage statistics" action). If the plugin's own data directory is unavailable at load time, the plugin SHALL treat persistence as unavailable and SHALL NOT start capture even if `trackShortcutUsage` is `true`, rather than counting presses in memory that can never be saved.
@@ -93,18 +82,3 @@ Usage counts SHALL be persisted as `{ version: 1, counts: Record<string, number>
 #### Scenario: Missing plugin directory disables capture instead of losing data silently
 - **WHEN** `trackShortcutUsage` is `true` but the plugin's data directory is unavailable at load time
 - **THEN** the plugin does not register the capture listener, and a warning is logged rather than counting presses in memory that will never be persisted
-
-### Requirement: User can reset all collected usage statistics
-The settings tab SHALL provide a "Reset usage statistics" action that clears all stored counts after explicit confirmation, since the action is destructive and irreversible.
-
-#### Scenario: Reset clears stored counts immediately
-- **WHEN** the user triggers the reset action and confirms
-- **THEN** in-memory counters are cleared and the usage data file is immediately updated to reflect zero recorded signatures, without waiting for the debounce interval
-
-#### Scenario: Reset requires confirmation
-- **WHEN** the user triggers the reset action
-- **THEN** the plugin requires an explicit confirmation step before clearing data
-
-#### Scenario: Reset is available even when tracking is currently disabled
-- **WHEN** `trackShortcutUsage` is `false` but prior usage data exists on disk
-- **THEN** the reset action is still available and clears that existing data

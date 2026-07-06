@@ -165,6 +165,11 @@ export function fillTemplate(title: string, date: string, content: string): stri
     .replaceAll("{{CONTENT}}", content);
 }
 
+/** Escapes `|` so a command name can't be misread as a Markdown table column separator. */
+export function escapeMarkdownTableCell(str: string): string {
+  return str.replace(/\|/g, "\\|");
+}
+
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")

@@ -4,7 +4,7 @@ import type { CategoryGroup, HotkeyBinding, HotkeysCheatsheetSettings, SortMode 
 import { t } from "./i18n";
 import { modLabel, filterLabel, keyIcon } from "./keyDisplay";
 import { matchesFilters, matchesFlatItem } from "./filterHotkeys";
-import { fillTemplate, renderHtmlSections } from "./htmlExportTemplate";
+import { fillTemplate, renderHtmlSections, escapeMarkdownTableCell } from "./htmlExportTemplate";
 import { getUsageCounts } from "./usageTracker";
 import { resolveUsage, type UsageResolution } from "./usageResolver";
 import { countToGlyph } from "./usageGlyph";
@@ -12,6 +12,8 @@ import { sortByMostUsedCategory, sortByMostUsedShortcut, type FlatHotkeyItem } f
 
 const EXPORT_FILENAME = "Hotkeys Cheatsheet.md";
 const EXPORT_HTML_FILENAME = "Hotkeys Cheatsheet.html";
+/** How long an "already exists" overwrite confirmation stays valid — matches the Notice's visible duration. */
+const EXPORT_OVERWRITE_CONFIRM_MS = 5000;
 
 // ── Modal ─────────────────────────────────────────────────────────────────
 
@@ -34,7 +36,7 @@ export class CheatsheetModal extends Modal {
   private sortItems: HTMLElement[] = [];
   private sortOpen = false;
   private sortMode: SortMode = "category";
-  private pendingOverwrite = false;
+  private pendingOverwrite: { path: string; expiresAt: number } | null = null;
   private gridEl!: HTMLElement;
 
   private collapseToggleBtn!: HTMLButtonElement;
@@ -87,7 +89,7 @@ export class CheatsheetModal extends Modal {
     // Reset collapse/sort state on every open
     this.collapsedSections = new Set();
     this.searchSnapshot = null;
-    this.pendingOverwrite = false;
+    this.pendingOverwrite = null;
     this.sortMode = "category";
 
     this.groups = collectHotkeys(this.app);
@@ -98,7 +100,7 @@ export class CheatsheetModal extends Modal {
 
   onClose() {
     activeDocument.removeEventListener("click", this.handleOutsideClick);
-    this.pendingOverwrite = false;
+    this.pendingOverwrite = null;
     this.contentEl.empty();
   }
 
@@ -384,7 +386,7 @@ export class CheatsheetModal extends Modal {
             return parts.map((p) => `\`${p}\``).join(" + ");
           })
           .join(" / ");
-        lines.push(`| ${entry.name} | ${hotkeyStr} |`);
+        lines.push(`| ${escapeMarkdownTableCell(entry.name)} | ${hotkeyStr} |`);
       }
     }
     return lines.join("\n");
@@ -395,9 +397,14 @@ export class CheatsheetModal extends Modal {
     const path = folder === "/" ? EXPORT_FILENAME : `${folder}/${EXPORT_FILENAME}`;
     const existing = this.app.vault.getAbstractFileByPath(path);
 
-    if (existing instanceof TFile && !this.pendingOverwrite) {
-      this.pendingOverwrite = true;
-      new Notice(t("modal.export_exists", { path }), 5000);
+    const confirmed =
+      this.pendingOverwrite !== null &&
+      this.pendingOverwrite.path === path &&
+      Date.now() < this.pendingOverwrite.expiresAt;
+
+    if (existing instanceof TFile && !confirmed) {
+      this.pendingOverwrite = { path, expiresAt: Date.now() + EXPORT_OVERWRITE_CONFIRM_MS };
+      new Notice(t("modal.export_exists", { path }), EXPORT_OVERWRITE_CONFIRM_MS);
       return;
     }
 
@@ -410,7 +417,7 @@ export class CheatsheetModal extends Modal {
       } else {
         savedFile = await this.app.vault.create(path, content);
       }
-      this.pendingOverwrite = false;
+      this.pendingOverwrite = null;
       super.close();
       await this.app.workspace.getLeaf().openFile(savedFile);
     } catch (err) {

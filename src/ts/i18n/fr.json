@@ -23,7 +23,7 @@
   "settings.ribbon.label": "Afficher l'icône dans le ruban",
   "settings.ribbon.desc": "Affiche l'icône clavier dans la barre de ruban. Prend effet après le rechargement d'Obsidian.",
   "settings.usage_tracking.label": "Suivre l'utilisation des raccourcis",
-  "settings.usage_tracking.desc": "Enregistre la fréquence d'utilisation de chaque raccourci et affiche des indicateurs d'utilisation dans l'aide-mémoire. Désactivé par défaut.",
+  "settings.usage_tracking.desc": "Enregistre la fréquence de chaque combinaison touche de modification + touche utilisée n'importe où dans l'application, et affiche des indicateurs d'utilisation dans l'aide-mémoire. Ne se limite pas aux raccourcis reconnus. Désactivé par défaut.",
   "settings.usage_tracking.reset_label": "Réinitialiser les statistiques d'utilisation",
   "settings.usage_tracking.reset_desc": "Efface tous les compteurs d'utilisation des raccourcis enregistrés. Cette action est irréversible.",
   "settings.usage_tracking.reset_confirm": "Cliquez à nouveau pour confirmer : ceci effacera définitivement toute l'utilisation des raccourcis enregistrée.",

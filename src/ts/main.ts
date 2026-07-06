@@ -14,11 +14,15 @@ export default class HotkeysCheatsheetPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
 
-    if (this.manifest.dir) {
-      await loadUsageData(this.app, this.manifest.dir);
-    }
+    const persistenceAvailable = await loadUsageData(this.app, this.manifest.dir);
     if (this.settings.trackShortcutUsage) {
-      startCapture(this.app);
+      if (persistenceAvailable) {
+        startCapture(this.app);
+      } else {
+        console.warn(
+          "[Hotkeys Cheatsheet] Usage tracking is enabled but the plugin directory is unavailable — capture was not started."
+        );
+      }
     }
 
     this.addSettingTab(new HotkeysCheatsheetSettingTab(this.app, this));
