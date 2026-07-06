@@ -78,6 +78,17 @@ function isComposedAltCharacter(evt: KeyboardEvent): boolean {
 }
 
 /**
+ * Maps a physical key `code` (e.g. "KeyK", "Digit5") back to its base
+ * letter/digit, or null if `code` isn't one of those.
+ */
+function baseKeyFromCode(code: string | undefined): string | null {
+  if (!code) return null;
+  const match = /^(?:Key([A-Z])|Digit([0-9]))$/.exec(code);
+  if (!match) return null;
+  return match[1] ?? match[2];
+}
+
+/**
  * Pure filter + canonicalisation for a raw keydown event. Returns null for
  * modifier-only keys, repeat events, and events that aren't a good shortcut
  * candidate — a bare key (Escape, Enter, arrows, ...) is indistinguishable
@@ -96,7 +107,20 @@ export function canonicaliseKeydown(evt: KeyboardEvent): string | null {
   if (!hasModifier) return null;
 
   const heldModifiers = MODIFIER_ORDER.filter((mod) => Keymap.isModifier(evt, mod));
-  return buildSignature(dedupeModAlias(heldModifiers), evt.key);
+
+  // With Ctrl/Meta also held, Alt's text-composition layer (macOS Option, or
+  // Windows/Linux AltGr) can still fire and report a composed character in
+  // `evt.key` (e.g. Cmd+Shift+Alt+K -> "̊", the ring-above dead key used for
+  // "Å") even though holding Ctrl/Meta means nothing will actually be typed —
+  // this is unambiguously a shortcut. Recover the physical letter/digit from
+  // `evt.code` so the signature matches the "K" that Obsidian's own hotkey
+  // bindings store, instead of an unmatchable composed symbol.
+  const recoveredKey =
+    evt.altKey && (evt.ctrlKey || evt.metaKey) && !isAsciiAlnum(evt.key)
+      ? baseKeyFromCode(evt.code)
+      : null;
+
+  return buildSignature(dedupeModAlias(heldModifiers), recoveredKey ?? evt.key);
 }
 
 // ── In-memory counters & persistence ────────────────────────────────────────

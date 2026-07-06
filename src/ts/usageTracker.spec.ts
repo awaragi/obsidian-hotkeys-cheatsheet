@@ -67,6 +67,7 @@ const platform = Platform as unknown as { isMacOS: boolean };
 
 function makeEvent(overrides: Partial<{
   key: string;
+  code: string;
   repeat: boolean;
   ctrlKey: boolean;
   metaKey: boolean;
@@ -75,6 +76,7 @@ function makeEvent(overrides: Partial<{
 }>): KeyboardEvent {
   return {
     key: "a",
+    code: "",
     repeat: false,
     ctrlKey: false,
     metaKey: false,
@@ -196,9 +198,32 @@ describe("canonicaliseKeydown", () => {
     expect(canonicaliseKeydown(evt)).toBe("Alt+B");
   });
 
-  it("still captures Cmd+Alt combos, since macOS does not compose text while Cmd is held", () => {
+  it("recovers the physical key from evt.code when Cmd+Alt still composes a character", () => {
     platform.isMacOS = true;
-    const evt = makeEvent({ metaKey: true, altKey: true, key: "ß" });
+    const evt = makeEvent({ metaKey: true, altKey: true, key: "ß", code: "KeyS" });
+    expect(canonicaliseKeydown(evt)).toBe("Mod+Alt+S");
+  });
+
+  it("recovers the physical key for Cmd+Shift+Alt+K composing to the ring-above dead key", () => {
+    platform.isMacOS = true;
+    const evt = makeEvent({
+      metaKey: true,
+      shiftKey: true,
+      altKey: true,
+      key: "̊",
+      code: "KeyK",
+    });
+    expect(canonicaliseKeydown(evt)).toBe("Mod+Shift+Alt+K");
+  });
+
+  it("recovers the physical digit for a Ctrl+Alt (AltGr) composed symbol", () => {
+    const evt = makeEvent({ ctrlKey: true, altKey: true, key: "@", code: "Digit2" });
+    expect(canonicaliseKeydown(evt)).toBe("Mod+Alt+2");
+  });
+
+  it("falls back to evt.key if evt.code isn't a recognisable physical key", () => {
+    platform.isMacOS = true;
+    const evt = makeEvent({ metaKey: true, altKey: true, key: "ß", code: "" });
     expect(canonicaliseKeydown(evt)).toBe("Mod+Alt+SS");
   });
 
