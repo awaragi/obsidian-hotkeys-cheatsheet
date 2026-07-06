@@ -169,6 +169,74 @@
   cursor: pointer;
 }
 
+/* ── Sort Control ─────────────────────────────────────────────────────────── */
+
+.hkc-sort-wrapper {
+  position: relative;
+}
+
+.hkc-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: var(--font-ui-small);
+  padding: 6px 12px;
+  white-space: nowrap;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.hkc-sort-btn:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+.hkc-sort-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 100;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-s);
+  padding: 6px 0;
+  min-width: 200px;
+}
+
+.hkc-sort-dropdown.hkc-hidden {
+  display: none;
+}
+
+.hkc-sort-item {
+  padding: 5px 14px;
+  cursor: pointer;
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+  user-select: none;
+  transition: background 0.1s;
+}
+
+.hkc-sort-item:hover {
+  background: var(--background-modifier-hover);
+}
+
+.hkc-sort-item--active {
+  color: var(--interactive-accent);
+  font-weight: 600;
+}
+
+.hkc-sort-item--disabled {
+  color: var(--text-faint);
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
 /* ── Export Dropdown ─────────────────────────────────────────────────────── */
 
 .hkc-export-wrapper {
@@ -334,6 +402,42 @@
   color: var(--text-normal);
   border-radius: 2px;
   padding: 0 1px;
+}
+
+.hkc-entry-name--muted {
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+/* ── Usage Indicators ────────────────────────────────────────────────────── */
+
+.hkc-usage {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  flex-shrink: 0;
+  font-family: var(--font-monospace);
+  font-size: 11px;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.hkc-usage-category {
+  margin-left: 8px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.hkc-usage-entry {
+  margin: 0 6px;
+}
+
+.hkc-usage-glyph {
+  color: var(--text-accent);
+}
+
+.hkc-flat-list .hkc-entry {
+  padding: 5px 0;
 }
 
 .hkc-entry-hotkeys {

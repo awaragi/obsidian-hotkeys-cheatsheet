@@ -6,12 +6,21 @@ import {
 } from "./settingsTab";
 import { t } from "./i18n";
 import { CheatsheetModal } from "./cheatsheetModal";
+import { loadUsageData, startCapture, stopCapture, flushUsageData } from "./usageTracker";
 
 export default class HotkeysCheatsheetPlugin extends Plugin {
   settings!: HotkeysCheatsheetSettings;
 
   async onload() {
     await this.loadSettings();
+
+    if (this.manifest.dir) {
+      await loadUsageData(this.app, this.manifest.dir);
+    }
+    if (this.settings.trackShortcutUsage) {
+      startCapture(this.app);
+    }
+
     this.addSettingTab(new HotkeysCheatsheetSettingTab(this.app, this));
 
     if (this.settings.showRibbonIcon) {
@@ -27,6 +36,11 @@ export default class HotkeysCheatsheetPlugin extends Plugin {
     });
   }
 
+  async onunload() {
+    stopCapture();
+    await flushUsageData();
+  }
+
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<HotkeysCheatsheetSettings>);
   }
@@ -36,6 +50,6 @@ export default class HotkeysCheatsheetPlugin extends Plugin {
   }
 
   private openCheatsheet() {
-    new CheatsheetModal(this.app).open();
+    new CheatsheetModal(this.app, this.settings).open();
   }
 }

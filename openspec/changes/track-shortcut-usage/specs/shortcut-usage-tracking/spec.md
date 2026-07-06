@@ -16,7 +16,7 @@ The settings tab SHALL provide a toggle, `trackShortcutUsage`, to enable or disa
 - **THEN** the capture listener is removed and previously stored usage counts remain on disk unchanged
 
 ### Requirement: Captured keydown events are filtered to shortcut-like combinations
-The capture listener SHALL only record an event when at least one of `Ctrl`, `Meta`/`Mod`, or `Alt` is held, or when the non-modifier key is one of a fixed allowlist of keys meaningful as bare shortcuts (`Escape`, `Tab`, `Enter`, `Delete`, `Backspace`, `ArrowUp`, `ArrowDown`, `ArrowLeft`, `ArrowRight`, `Home`, `End`, `PageUp`, `PageDown`, `F1`–`F12`). Events where `key` is itself a modifier, or where `repeat` is `true`, SHALL be ignored.
+The capture listener SHALL only record an event when at least one of `Ctrl`, `Meta`/`Mod`, or `Alt` is held. Events where `key` is itself a modifier, or where `repeat` is `true`, SHALL be ignored. A bare (no-modifier) key press — including keys like `Escape`, `Enter`, `Tab`, `Backspace`, arrows, and function keys — SHALL NOT be recorded: these are indistinguishable from normal typing/navigation/UI-dismissal and would only add noise, not a meaningful shortcut-usage signal.
 
 #### Scenario: Modifier combo is captured
 - **WHEN** the user presses `Cmd/Ctrl+Shift+B`
@@ -26,9 +26,9 @@ The capture listener SHALL only record an event when at least one of `Ctrl`, `Me
 - **WHEN** the user types a plain letter or digit key with no `Ctrl`/`Meta`/`Alt` held
 - **THEN** the press is not recorded
 
-#### Scenario: Allowlisted bare key is captured
-- **WHEN** the user presses `Escape` with no modifiers held
-- **THEN** the press is recorded
+#### Scenario: Bare non-modifier key is not captured
+- **WHEN** the user presses `Escape`, `Enter`, `Tab`, `Backspace`, an arrow key, or a function key with no `Ctrl`/`Meta`/`Alt` held
+- **THEN** the press is not recorded
 
 #### Scenario: Held-down key repeat is not double-counted
 - **WHEN** the user holds a qualifying shortcut combination down and the browser fires repeated `keydown` events for it

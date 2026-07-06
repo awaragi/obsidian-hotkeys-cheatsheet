@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { matchesFilters } from "./filterHotkeys";
+import { matchesFilters, matchesFlatItem } from "./filterHotkeys";
 import type { HotkeyEntry } from "./types";
+import type { FlatHotkeyItem } from "./sortHotkeys";
 
 function makeEntry(
   name: string,
@@ -71,5 +72,35 @@ describe("matchesFilters", () => {
       { modifiers: ["Mod", "Shift"], key: "X" },
     ]);
     expect(matchesFilters(entry, "", new Set(["Mod", "Shift"]))).toBe(true);
+  });
+});
+
+function makeFlatItem(overrides: Partial<FlatHotkeyItem>): FlatHotkeyItem {
+  return {
+    id: "test:cmd",
+    name: "Toggle Bold",
+    hotkeys: [{ modifiers: ["Mod"], key: "B" }],
+    count: 3,
+    isOrphan: false,
+    ...overrides,
+  };
+}
+
+describe("matchesFlatItem", () => {
+  it("matches a bound item like matchesFilters would", () => {
+    const item = makeFlatItem({});
+    expect(matchesFlatItem(item, "bold", new Set())).toBe(true);
+    expect(matchesFlatItem(item, "italic", new Set())).toBe(false);
+  });
+
+  it("excludes an orphan pseudo-entry whenever a text query is active", () => {
+    const orphan = makeFlatItem({ isOrphan: true, name: "" });
+    expect(matchesFlatItem(orphan, "b", new Set())).toBe(false);
+  });
+
+  it("keeps an orphan pseudo-entry visible when only the modifier filter is active", () => {
+    const orphan = makeFlatItem({ isOrphan: true, name: "" });
+    expect(matchesFlatItem(orphan, "", new Set(["Mod"]))).toBe(true);
+    expect(matchesFlatItem(orphan, "", new Set(["Shift"]))).toBe(false);
   });
 });

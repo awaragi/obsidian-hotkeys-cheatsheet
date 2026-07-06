@@ -1,10 +1,14 @@
 import { App, Modal, Notice, setIcon, TFile } from "obsidian";
 import { collectHotkeys } from "./hotkeyCollector";
-import type { CategoryGroup } from "./types";
+import type { CategoryGroup, HotkeyBinding, HotkeysCheatsheetSettings, SortMode } from "./types";
 import { t } from "./i18n";
 import { modLabel, filterLabel, keyIcon } from "./keyDisplay";
-import { matchesFilters } from "./filterHotkeys";
+import { matchesFilters, matchesFlatItem } from "./filterHotkeys";
 import { fillTemplate, renderHtmlSections } from "./htmlExportTemplate";
+import { getUsageCounts } from "./usageTracker";
+import { resolveUsage, type UsageResolution } from "./usageResolver";
+import { countToGlyph } from "./usageGlyph";
+import { sortByMostUsedCategory, sortByMostUsedShortcut, type FlatHotkeyItem } from "./sortHotkeys";
 
 const EXPORT_FILENAME = "Hotkeys Cheatsheet.md";
 const EXPORT_HTML_FILENAME = "Hotkeys Cheatsheet.html";
@@ -12,7 +16,9 @@ const EXPORT_HTML_FILENAME = "Hotkeys Cheatsheet.html";
 // ── Modal ─────────────────────────────────────────────────────────────────
 
 export class CheatsheetModal extends Modal {
+  private settings: HotkeysCheatsheetSettings;
   private groups: CategoryGroup[] = [];
+  private usageResolution!: UsageResolution;
   private searchQuery = "";
   private activeModifiers: Set<string> = new Set();
 
@@ -23,6 +29,11 @@ export class CheatsheetModal extends Modal {
   private exportBtn!: HTMLButtonElement;
   private exportDropdown!: HTMLElement;
   private exportOpen = false;
+  private sortBtn!: HTMLButtonElement;
+  private sortDropdown!: HTMLElement;
+  private sortItems: HTMLElement[] = [];
+  private sortOpen = false;
+  private sortMode: SortMode = "category";
   private pendingOverwrite = false;
   private gridEl!: HTMLElement;
 
@@ -45,10 +56,15 @@ export class CheatsheetModal extends Modal {
       this.exportOpen = false;
       this.exportDropdown.addClass("hkc-hidden");
     }
+    if (this.sortOpen && !this.sortDropdown.contains(e.target as Node)) {
+      this.sortOpen = false;
+      this.sortDropdown.addClass("hkc-hidden");
+    }
   };
 
-  constructor(app: App) {
+  constructor(app: App, settings: HotkeysCheatsheetSettings) {
     super(app);
+    this.settings = settings;
   }
 
   /**
@@ -68,12 +84,14 @@ export class CheatsheetModal extends Modal {
     this.modalEl.addClass("hkc-full-modal");
     this.titleEl.setText(t("modal.title"));
 
-    // Reset collapse state on every open
+    // Reset collapse/sort state on every open
     this.collapsedSections = new Set();
     this.searchSnapshot = null;
     this.pendingOverwrite = false;
+    this.sortMode = "category";
 
     this.groups = collectHotkeys(this.app);
+    this.usageResolution = resolveUsage(this.groups, getUsageCounts());
     this.buildUI();
     activeDocument.addEventListener("click", this.handleOutsideClick);
   }
@@ -211,6 +229,9 @@ export class CheatsheetModal extends Modal {
 
     this.filterDropdown.addEventListener("click", (e) => e.stopPropagation());
 
+    // Sort control
+    this.buildSortControl(toolbar);
+
     // Collapse / Expand All toggle button — far right
     this.collapseToggleBtn = toolbar.createEl("button", {
       cls: "hkc-icon-btn",
@@ -231,12 +252,69 @@ export class CheatsheetModal extends Modal {
     this.updateCollapseToggle();
   }
 
+  private buildSortControl(toolbar: HTMLElement) {
+    const sortWrapper = toolbar.createDiv({ cls: "hkc-sort-wrapper" });
+    this.sortBtn = sortWrapper.createEl("button", {
+      text: t("modal.sort_label"),
+      cls: "hkc-sort-btn",
+    });
+    this.sortDropdown = sortWrapper.createDiv({
+      cls: "hkc-sort-dropdown hkc-hidden",
+    });
+
+    const modes: { mode: SortMode; labelKey: "modal.sort_category" | "modal.sort_most_used_category" | "modal.sort_most_used_shortcut" }[] = [
+      { mode: "category", labelKey: "modal.sort_category" },
+      { mode: "most-used-category", labelKey: "modal.sort_most_used_category" },
+      { mode: "most-used-shortcut", labelKey: "modal.sort_most_used_shortcut" },
+    ];
+
+    this.sortItems = [];
+    for (const { mode, labelKey } of modes) {
+      const item = this.sortDropdown.createDiv({ cls: "hkc-sort-item" });
+      item.setText(t(labelKey));
+      item.dataset.mode = mode;
+
+      const usageDependent = mode !== "category";
+      if (usageDependent && !this.settings.trackShortcutUsage) {
+        item.addClass("hkc-sort-item--disabled");
+        item.setAttribute("aria-label", t("modal.sort_disabled_hint"));
+      } else {
+        item.addEventListener("click", () => {
+          this.sortMode = mode;
+          this.sortOpen = false;
+          this.sortDropdown.addClass("hkc-hidden");
+          this.updateSortItems();
+          this.updateToolbarState();
+          this.renderGrid();
+        });
+      }
+      this.sortItems.push(item);
+    }
+
+    this.sortBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.sortOpen = !this.sortOpen;
+      this.sortDropdown.toggleClass("hkc-hidden", !this.sortOpen);
+    });
+
+    this.sortDropdown.addEventListener("click", (e) => e.stopPropagation());
+    this.updateSortItems();
+  }
+
+  private updateSortItems() {
+    for (const item of this.sortItems) {
+      item.toggleClass("hkc-sort-item--active", item.dataset.mode === this.sortMode);
+    }
+  }
+
   // ── Toolbar state helpers ──────────────────────────────────────────────
 
   private updateToolbarState() {
     const searching = this.searchQuery !== "";
-    this.collapseToggleBtn.disabled = searching;
-    this.collapseToggleBtn.toggleClass("hkc-btn-disabled", searching);
+    const flatMode = this.sortMode === "most-used-shortcut";
+    const disableCollapse = searching || flatMode;
+    this.collapseToggleBtn.disabled = disableCollapse;
+    this.collapseToggleBtn.toggleClass("hkc-btn-disabled", disableCollapse);
     this.updateCollapseToggle();
   }
 
@@ -285,6 +363,8 @@ export class CheatsheetModal extends Modal {
   }
 
   // ── Export ────────────────────────────────────────────────────────────────
+  // Export always reflects the raw category/alphabetical structure — never
+  // the active sort mode or usage indicators, regardless of tracking state.
 
   private generateMarkdown(): string {
     const today = new Date().toISOString().slice(0, 10);
@@ -364,28 +444,50 @@ export class CheatsheetModal extends Modal {
 
     const query = this.searchQuery.toLowerCase();
     const isSearching = query !== "";
+    const showUsage = this.settings.trackShortcutUsage;
     let totalVisible = 0;
 
-    for (const group of this.groups) {
-      const visibleEntries = group.entries.filter((entry) =>
-        matchesFilters(entry, query, this.activeModifiers)
+    if (this.sortMode === "most-used-shortcut") {
+      const flatItems = sortByMostUsedShortcut(
+        this.usageResolution.groups,
+        this.usageResolution.orphans
       );
-
-      if (visibleEntries.length === 0) continue;
-      totalVisible += visibleEntries.length;
-
-      // While searching, force-expand all sections
-      const isCollapsed =
-        !isSearching && this.collapsedSections.has(group.category);
-
-      this.renderCategorySection(
-        el,
-        group.category,
-        visibleEntries,
-        query,
-        isCollapsed,
-        isSearching
+      const visibleItems = flatItems.filter((item) =>
+        matchesFlatItem(item, query, this.activeModifiers)
       );
+      totalVisible = visibleItems.length;
+      if (visibleItems.length > 0) {
+        this.renderFlatList(el, visibleItems, query, showUsage);
+      }
+    } else {
+      const orderedGroups =
+        this.sortMode === "most-used-category"
+          ? sortByMostUsedCategory(this.usageResolution.groups)
+          : this.usageResolution.groups;
+
+      for (const group of orderedGroups) {
+        const visibleEntries = group.entries.filter((entry) =>
+          matchesFilters(entry, query, this.activeModifiers)
+        );
+
+        if (visibleEntries.length === 0) continue;
+        totalVisible += visibleEntries.length;
+
+        // While searching, force-expand all sections
+        const isCollapsed =
+          !isSearching && this.collapsedSections.has(group.category);
+
+        this.renderCategorySection(
+          el,
+          group.category,
+          group.aggregate,
+          visibleEntries,
+          query,
+          isCollapsed,
+          isSearching,
+          showUsage
+        );
+      }
     }
 
     if (totalVisible === 0) {
@@ -398,10 +500,12 @@ export class CheatsheetModal extends Modal {
   private renderCategorySection(
     parent: HTMLElement,
     category: string,
-    entries: CategoryGroup["entries"],
+    aggregate: number,
+    entries: { id: string; name: string; hotkeys: HotkeyBinding[]; count: number }[],
     query: string,
     isCollapsed: boolean,
-    isSearching: boolean
+    isSearching: boolean,
+    showUsage: boolean
   ) {
     const section = parent.createDiv({ cls: "hkc-section" });
 
@@ -413,6 +517,10 @@ export class CheatsheetModal extends Modal {
     const arrow = heading.createSpan({ cls: "hkc-collapse-arrow" });
     arrow.textContent = isCollapsed ? "▸" : "▾";
     heading.appendText(" " + category);
+
+    if (showUsage && aggregate > 0) {
+      this.renderUsageIndicator(heading, aggregate, this.usageResolution.maxCategoryAggregate, "hkc-usage-category");
+    }
 
     // Click to toggle collapse — disabled while searching
     if (!isSearching) {
@@ -430,35 +538,83 @@ export class CheatsheetModal extends Modal {
     if (isCollapsed) return;
 
     for (const entry of entries) {
-      const entryEl = section.createDiv({ cls: "hkc-entry" });
+      this.renderHotkeyEntryRow(section, entry.name, entry.hotkeys, entry.count, query, showUsage);
+    }
+  }
 
-      // Command name with optional search highlight
-      const nameEl = entryEl.createDiv({ cls: "hkc-entry-name" });
-      if (query && entry.name.toLowerCase().includes(query)) {
-        this.renderHighlighted(nameEl, entry.name, query);
-      } else {
-        nameEl.textContent = entry.name;
+  private renderFlatList(
+    parent: HTMLElement,
+    items: FlatHotkeyItem[],
+    query: string,
+    showUsage: boolean
+  ) {
+    const section = parent.createDiv({ cls: "hkc-section hkc-flat-list" });
+    for (const item of items) {
+      this.renderHotkeyEntryRow(
+        section,
+        item.isOrphan ? t("modal.no_command") : item.name,
+        item.hotkeys,
+        item.count,
+        query,
+        showUsage,
+        { muted: item.isOrphan, disableKeyHighlight: item.isOrphan }
+      );
+    }
+  }
+
+  /** Renders one entry row (name + optional usage indicator + hotkey badges). Shared by category and flat rendering. */
+  private renderHotkeyEntryRow(
+    parent: HTMLElement,
+    name: string,
+    hotkeys: HotkeyBinding[],
+    count: number,
+    query: string,
+    showUsage: boolean,
+    options: { muted?: boolean; disableKeyHighlight?: boolean } = {}
+  ) {
+    const entryEl = parent.createDiv({ cls: "hkc-entry" });
+
+    // Command name with optional search highlight
+    const nameEl = entryEl.createDiv({ cls: "hkc-entry-name" });
+    if (options.muted) {
+      nameEl.setText(name);
+      nameEl.addClass("hkc-entry-name--muted");
+    } else if (query && name.toLowerCase().includes(query)) {
+      this.renderHighlighted(nameEl, name, query);
+    } else {
+      nameEl.textContent = name;
+    }
+
+    if (showUsage && count > 0) {
+      this.renderUsageIndicator(entryEl, count, this.usageResolution.maxEntryCount, "hkc-usage-entry");
+    }
+
+    // Hotkey badge rows
+    const hotkeysEl = entryEl.createDiv({ cls: "hkc-entry-hotkeys" });
+    for (const hk of hotkeys) {
+      const keyMatches =
+        !options.disableKeyHighlight && query.length > 0 && hk.key.toLowerCase() === query;
+
+      const hkRow = hotkeysEl.createDiv({ cls: "hkc-hk-row" });
+      for (const mod of hk.modifiers) {
+        hkRow.createEl("kbd", { text: modLabel(mod), cls: "hkc-kbd" });
       }
-
-      // Hotkey badge rows
-      const hotkeysEl = entryEl.createDiv({ cls: "hkc-entry-hotkeys" });
-      for (const hk of entry.hotkeys) {
-        const keyMatches =
-          query.length > 0 && hk.key.toLowerCase() === query;
-
-        const hkRow = hotkeysEl.createDiv({ cls: "hkc-hk-row" });
-        for (const mod of hk.modifiers) {
-          hkRow.createEl("kbd", { text: modLabel(mod), cls: "hkc-kbd" });
-        }
-        const keyEl = hkRow.createEl("kbd", {
-          text: keyIcon(hk.key),
-          cls: "hkc-kbd",
-        });
-        if (keyMatches) {
-          keyEl.addClass("hkc-kbd-match");
-        }
+      const keyEl = hkRow.createEl("kbd", {
+        text: keyIcon(hk.key),
+        cls: "hkc-kbd",
+      });
+      if (keyMatches) {
+        keyEl.addClass("hkc-kbd-match");
       }
     }
+  }
+
+  /** Renders a single glyph+count usage indicator, scaled against `max`. */
+  private renderUsageIndicator(parent: HTMLElement, count: number, max: number, extraCls: string) {
+    const { glyph } = countToGlyph(count, max);
+    const wrap = parent.createSpan({ cls: `hkc-usage ${extraCls}` });
+    wrap.createSpan({ text: glyph, cls: "hkc-usage-glyph" });
+    wrap.createSpan({ text: ` ${count}`, cls: "hkc-usage-count" });
   }
 
   /**

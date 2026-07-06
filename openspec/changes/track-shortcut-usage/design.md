@@ -27,11 +27,11 @@ Obsidian exposes a public `Scope`/`Keymap` API (`app.scope.register(modifiers, k
 **Alternative considered**: registering on `app.scope` for every known binding. Rejected — introduces a dependency on `hotkeyManager` at capture time (which we explicitly want to avoid per the storage decision below) and has unverified behavior across the scope stack.
 
 ### Decision: Only capture signatures that look like shortcuts, not plain typing
-A raw `keydown` listener sees every keystroke, including normal typing. Recording every letter/digit key would flood storage with noise and isn't "shortcut usage" by any reasonable definition. Filter: capture an event only if
-- at least one of `ctrlKey`, `metaKey`, or `altKey` is true (covers `Mod`, `Ctrl`, `Meta`, `Alt` combos regardless of `Shift`), **or**
-- the non-modifier key itself is in a fixed allowlist of keys that are meaningful as bare shortcuts in Obsidian: `Escape`, `Tab`, `Enter`, `Delete`, `Backspace`, `ArrowUp/Down/Left/Right`, `Home`, `End`, `PageUp`, `PageDown`, `F1`–`F12`.
+A raw `keydown` listener sees every keystroke, including normal typing. Recording every letter/digit key would flood storage with noise and isn't "shortcut usage" by any reasonable definition. Filter: capture an event only if at least one of `ctrlKey`, `metaKey`, or `altKey` is true (covers `Mod`, `Ctrl`, `Meta`, `Alt` combos regardless of `Shift`).
 
 A bare `Shift+letter` (e.g. typing a capital `H`) is therefore **not** captured — it's indistinguishable from ordinary typing and Obsidian itself has no bare-`Shift` command hotkeys of that shape. Events where `evt.key` itself is a modifier (`Control`, `Shift`, `Alt`, `Meta`) are always ignored (no key to record yet). `evt.repeat` (key-repeat while held down) is ignored — count one press, not one per repeat tick.
+
+An earlier version of this decision also allowlisted a fixed set of bare (no-modifier) keys — `Escape`, `Tab`, `Enter`, `Delete`, `Backspace`, arrows, `Home`/`End`/`PageUp`/`PageDown`, `F1`–`F12` — as "meaningful bare shortcuts." Real captured data showed this was a mistake: these keys are pressed constantly during ordinary editing/navigation/dismissal (closing a modal with `Escape`, confirming with `Enter`, etc.), so they never correlate with a deliberate shortcut choice and only ever showed up as noisy, unresolvable orphans in the display feature. The allowlist was removed — a modifier is now always required.
 
 ### Decision: Signature format
 Canonical string: fixed modifier order `Mod, Ctrl, Meta, Shift, Alt` (matching the order already used for display in [`keyDisplay.ts`](../../../src/ts/keyDisplay.ts)), each checked via the public static `Keymap.isModifier(evt, modifier)`, joined with `+`, followed by the uppercased `evt.key`. E.g. `Mod+Shift+B`. This is an internal-only contract (write and read both live in this plugin), so it doesn't need to match Obsidian's own internal hotkey string format — it only needs to be self-consistent so a later display feature can invert it against `hotkeyManager` bindings using the same canonicalisation rule.
@@ -48,10 +48,10 @@ Use Obsidian's public `debounce(cb, timeout, resetTimer)` helper (already export
 ## Risks / Trade-offs
 
 - **[Risk]** A capture-phase global listener runs on *every* keydown across the entire app, including normal typing → potential input latency if the handler does anything expensive. **Mitigation**: handler does only cheap synchronous work (a few boolean checks + string concat + map increment); no DOM queries, no command/hotkey resolution at capture time.
-- **[Risk]** The "looks like a shortcut" filter (Decision above) is a heuristic, not a source of truth — it will occasionally miss a legitimate bare-key command hotkey outside the allowlist, or a plugin-defined bare-modifier binding. **Mitigation**: allowlist covers the common non-modifier Obsidian shortcuts; this can be revisited once real usage data / feedback exists. Documented explicitly as a deliberate trade-off, not an oversight.
+- **[Risk]** Requiring a modifier means a small number of legitimate bare-key command hotkeys (e.g. a plugin binding a bare function key) go untracked. **Mitigation**: accepted deliberately — the earlier bare-key allowlist was tried and produced far worse noise (mundane `Escape`/`Enter`/arrow presses drowning out real shortcut usage) than this narrower gap.
 - **[Risk]** Best-effort flush on `onunload()` may not complete if Obsidian tears down the plugin synchronously before an async write finishes. **Mitigation**: throttled interval keeps the on-disk state reasonably fresh regardless (bounded staleness ~ the throttle interval), so a missed final flush loses at most a small window of counts, not everything.
 - **[Trade-off]** Storing raw signatures with no command resolution means a signature whose binding was later removed/rebound becomes unresolvable noise until the (future) display feature labels it "no command associated." This is accepted per explicit product direction — resolution is deliberately deferred to display time.
 
 ## Open Questions
 
-None blocking — the allowlist in the "looks like a shortcut" decision can be adjusted post-implementation without any data migration, since it only affects what's captured going forward, not the storage format.
+None blocking — the "looks like a shortcut" filter can be adjusted post-implementation without any data migration, since it only affects what's captured going forward, not the storage format.

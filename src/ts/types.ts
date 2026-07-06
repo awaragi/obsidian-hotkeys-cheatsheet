@@ -15,10 +15,14 @@ export interface CategoryGroup {
   entries: HotkeyEntry[];
 }
 
+export type SortMode = "category" | "most-used-category" | "most-used-shortcut";
+
 export interface HotkeysCheatsheetSettings {
   showRibbonIcon: boolean;
+  trackShortcutUsage: boolean;
 }
 
 export const DEFAULT_SETTINGS: HotkeysCheatsheetSettings = {
   showRibbonIcon: true,
+  trackShortcutUsage: false,
 };
