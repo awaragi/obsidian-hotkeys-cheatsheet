@@ -13,7 +13,7 @@ import {
   sortByKeyFlat,
   groupByModifier,
 } from "./sortHotkeys";
-import type { ResolvedCategoryGroup } from "./usageResolver";
+import type { ResolvedCategoryGroup } from "../usage/usageResolver";
 
 function makeGroups(): ResolvedCategoryGroup[] {
   return [

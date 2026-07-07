@@ -1,6 +1,6 @@
 import { App } from "obsidian";
 import { CORE_PREFIX_MAP, CATEGORY_ORDER } from "./categories";
-import type { HotkeyBinding, HotkeyEntry, CategoryGroup } from "./types";
+import type { HotkeyBinding, HotkeyEntry, CategoryGroup } from "../types";
 
 export type { HotkeyBinding, HotkeyEntry, CategoryGroup };
 

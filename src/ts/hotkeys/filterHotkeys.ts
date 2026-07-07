@@ -1,4 +1,4 @@
-import type { HotkeyBinding, HotkeyEntry } from "./types";
+import type { HotkeyBinding, HotkeyEntry } from "../types";
 import type { FlatHotkeyItem } from "./sortHotkeys";
 
 /** True if at least one hotkey contains ALL active modifiers (AND logic). */

@@ -1,6 +1,6 @@
-import en from "./i18n/en.json";
-import fr from "./i18n/fr.json";
-import es from "./i18n/es.json";
+import en from "./locales/en.json";
+import fr from "./locales/fr.json";
+import es from "./locales/es.json";
 
 type Translations = typeof en;
 

@@ -4,9 +4,9 @@ import {
   HotkeysCheatsheetSettings,
   HotkeysCheatsheetSettingTab,
 } from "./settingsTab";
-import { t } from "./i18n";
-import { CheatsheetModal } from "./cheatsheetModal";
-import { loadUsageData, startCapture, stopCapture, flushUsageData } from "./usageTracker";
+import { t } from "./i18n/i18n";
+import { CheatsheetModal } from "./modal/cheatsheet";
+import { loadUsageData, startCapture, stopCapture, flushUsageData } from "./usage/usageTracker";
 
 export default class HotkeysCheatsheetPlugin extends Plugin {
   settings!: HotkeysCheatsheetSettings;

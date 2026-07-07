@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { matchesFilters, matchesFlatItem } from "./filterHotkeys";
-import type { HotkeyEntry } from "./types";
+import type { HotkeyEntry } from "../types";
 import type { FlatHotkeyItem } from "./sortHotkeys";
 
 function makeEntry(

@@ -7,7 +7,7 @@ vi.mock("obsidian", () => ({
 }));
 
 import { resolveUsage } from "./usageResolver";
-import type { CategoryGroup } from "./types";
+import type { CategoryGroup } from "../types";
 
 function makeGroups(): CategoryGroup[] {
   return [

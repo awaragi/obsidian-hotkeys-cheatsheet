@@ -1,9 +1,9 @@
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 import type HotkeysCheatsheetPlugin from "./main";
-import { t } from "./i18n";
+import { t } from "./i18n/i18n";
 import type { HotkeysCheatsheetSettings } from "./types";
 import { DEFAULT_SETTINGS } from "./types";
-import { startCapture, stopCapture, resetUsageData } from "./usageTracker";
+import { startCapture, stopCapture, resetUsageData } from "./usage/usageTracker";
 
 export type { HotkeysCheatsheetSettings };
 export { DEFAULT_SETTINGS };

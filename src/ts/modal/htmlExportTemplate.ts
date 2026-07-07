@@ -1,5 +1,5 @@
-import type { CategoryGroup } from "./types";
-import { modLabel, keyIcon } from "./keyDisplay";
+import type { CategoryGroup } from "../types";
+import { modLabel, keyIcon } from "../hotkeys/keyDisplay";
 
 export const HTML_TEMPLATE = `<!DOCTYPE html>
 <html lang="en">

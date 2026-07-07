@@ -1,4 +1,4 @@
-import type { CategoryGroup, HotkeyEntry } from "./types";
+import type { CategoryGroup, HotkeyEntry } from "../types";
 import { buildSignature, parseSignature } from "./usageTracker";
 
 export interface ResolvedHotkeyEntry extends HotkeyEntry {

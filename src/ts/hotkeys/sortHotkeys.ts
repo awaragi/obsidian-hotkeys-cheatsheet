@@ -1,6 +1,6 @@
-import type { HotkeyBinding } from "./types";
-import type { ResolvedCategoryGroup, OrphanSignature } from "./usageResolver";
-import { MODIFIER_ORDER } from "./usageTracker";
+import type { HotkeyBinding } from "../types";
+import type { ResolvedCategoryGroup, OrphanSignature } from "../usage/usageResolver";
+import { MODIFIER_ORDER } from "../usage/usageTracker";
 import { compareKeys } from "./keyDisplay";
 
 /** A single row in the flat "most-used shortcut" list — a bound entry or an orphan pseudo-entry. */
