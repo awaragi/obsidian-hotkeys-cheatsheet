@@ -88,7 +88,7 @@ export function saveHtmlDownload(groups: CategoryGroup[]): void {
   const html = generateHtml(groups);
   const blob = new Blob([html], { type: "text/html" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
+  const a = activeDocument.createElement("a");
   a.href = url;
   a.download = EXPORT_HTML_FILENAME;
   a.click();

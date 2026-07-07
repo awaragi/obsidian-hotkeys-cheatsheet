@@ -40,9 +40,9 @@ export default class HotkeysCheatsheetPlugin extends Plugin {
     });
   }
 
-  async onunload() {
+  onunload() {
     stopCapture();
-    await flushUsageData();
+    void flushUsageData();
   }
 
   async loadSettings() {

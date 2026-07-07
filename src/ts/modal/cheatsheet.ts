@@ -51,7 +51,7 @@ export class CheatsheetModal extends Modal {
 
     this.toolbar = new Toolbar(this.settings, this.state, {
       onChange: () => this.gridRenderer.render(),
-      onExportNote: () => this.exportNote(),
+      onExportNote: () => void this.exportNote(),
       onExportHtml: () => saveHtmlDownload(this.state.groups),
     });
     this.toolbar.build(contentEl);
