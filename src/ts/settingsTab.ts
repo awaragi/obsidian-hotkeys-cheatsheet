@@ -60,7 +60,7 @@ export class HotkeysCheatsheetSettingTab extends PluginSettingTab {
       .addButton((button) =>
         button
           .setButtonText(t("settings.usage_tracking.reset_label"))
-          .setWarning()
+          .setDestructive()
           .onClick(async () => {
             if (!this.resetPending) {
               this.resetPending = true;
