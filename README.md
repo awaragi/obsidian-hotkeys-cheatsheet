@@ -18,6 +18,8 @@ Obsidian's built-in hotkey settings show a flat alphabetical list of 250+ comman
 - **Search clear button** — `×` button inside the search field clears the query instantly
 - **Modifier filter** — dropdown to show only hotkeys that include specific modifiers (AND logic: select Cmd + Shift to find all `Cmd Shift` combos)
 - **Modifier filter chips** — active modifier filters are shown directly on the filter button as flat `<kbd>` chips
+- **Sort menu** — reorder the cheatsheet **By Category** (default), **By Modifier**, **By Key**, **By Most-Used Category**, or **By Most-Used Shortcut**; the last two need [usage tracking](#shortcut-usage-tracking-opt-in-fully-local) turned on
+- **Usage indicators** *(opt-in)* — small bar-glyph + count badges next to each shortcut and category heading, showing how often it's actually been pressed — see [Shortcut usage tracking](#shortcut-usage-tracking-opt-in-fully-local)
 - **Export menu** — toolbar export dropdown lets you save the cheatsheet as a note or export it as HTML
 - **OS-aware badges** — `Cmd`/`Option` on macOS, `Ctrl`/`Alt`/`Win` on Windows/Linux
 - **Special key icons** — arrow keys show ↑↓←→, Enter shows ↵, Backspace shows ⌫, Tab shows ⇥, etc.
@@ -46,6 +48,21 @@ Use the **Export** button in the modal toolbar to save the current cheatsheet in
 
 ---
 
+## Shortcut usage tracking (opt-in, fully local)
+
+The plugin can optionally track how often you actually press each shortcut, so the cheatsheet can highlight what you use most and offer "most-used" sort modes. A few important points about what this does and doesn't do:
+
+- **Off by default.** Nothing is recorded unless you explicitly enable **Track shortcut usage** in Settings.
+- **Tracks key combinations, not commands.** It records that *"Cmd+Shift+K" was pressed 12 times* — never *which command* ran, never command names, never file names or content, never anything you type. It's counting physical key presses, not actions.
+- **Not limited to hotkeys you've assigned.** Any modifier+key combination pressed anywhere in Obsidian is counted, even if it isn't bound to a command. This is intentional — it lets you spot combos you press habitually that aren't assigned to anything yet (these show up as "No command" entries in the **By Most-Used Shortcut** sort mode).
+- **100% local — nothing is ever sent anywhere.** There are no network requests in this plugin, period. Counts are written to a single file, `usage-data.json`, inside this plugin's own folder in your vault (e.g. `.obsidian/plugins/hotkeys-cheatsheet/usage-data.json`). That file never leaves your machine.
+- **Don't sync `usage-data.json` across devices.** Counts are specific to how *this machine* is used — syncing it (via Obsidian Sync, git, Syncthing, etc.) will mix or overwrite counts from unrelated devices. If your vault is synced, exclude this file (e.g. add `usage-data.json` to `.gitignore`, or to your sync tool's ignore list).
+- **Fully resettable.** Settings → **Reset usage statistics** permanently clears the recorded counts (a second confirming click is required, since this can't be undone).
+
+When enabled, usage shows up in the cheatsheet as small bar-glyph + count badges (e.g. `▅ 12`) next to each shortcut and category heading, scaled relative to your most-used entries — and unlocks the **By Most-Used Category** / **By Most-Used Shortcut** sort modes.
+
+---
+
 ## Settings
 
 Open **Settings → Hotkeys Cheatsheet** to configure:
@@ -53,6 +70,8 @@ Open **Settings → Hotkeys Cheatsheet** to configure:
 | Setting | Default | Description |
 |---------|---------|-------------|
 | Show ribbon icon | On | Toggles whether the keyboard icon appears in the ribbon on startup. If disabled, the command palette entry still opens the cheatsheet. |
+| Track shortcut usage | Off | Enables local-only shortcut usage tracking — see [Shortcut usage tracking](#shortcut-usage-tracking-opt-in-fully-local) above for exactly what this does and doesn't do. |
+| Reset usage statistics | — | Permanently clears all recorded shortcut usage counts (click twice to confirm). Only relevant when usage tracking is on. |
 
 ---
 
@@ -97,18 +116,38 @@ npm run clean
 ```text
 src/
 ├── ts/
-│   ├── main.ts              Plugin entry point — ribbon icon, command, ribbon visibility setting
-│   ├── settingsTab.ts       Settings tab — ribbon toggle and about blurb
-│   ├── cheatsheetModal.ts   Modal UI — columns, search, collapse, modifier filter, kbd badges
-│   ├── hotkeyCollector.ts   Data layer — merges defaultKeys + customKeys, categorises, sorts
-│   ├── categories.ts        Curated prefix → category map and display order
-│   ├── i18n.ts              Locale detection and t() helper
+│   ├── main.ts                    Plugin entry point — ribbon icon, command, settings load/save
+│   ├── settingsTab.ts             Settings tab — ribbon toggle, usage tracking toggle + reset, about blurb
+│   ├── types.ts                   Shared types (HotkeyBinding, CategoryGroup, SortMode, settings shape)
+│   │
+│   ├── modal/                     The cheatsheet modal, split by concern
+│   │   ├── cheatsheet.ts          CheatsheetModal — lifecycle; wires state/toolbar/grid/export together
+│   │   ├── state.ts               CheatsheetState — search/filter/sort/collapse state + its invariants
+│   │   ├── toolbar.ts             Toolbar — export/filter/sort dropdowns, search box, collapse-all toggle
+│   │   ├── grid.ts                GridRenderer — category/flat rendering, entry rows, usage badges, search highlight
+│   │   ├── export.ts              Markdown generation, vault write w/ overwrite confirm, HTML download
+│   │   └── htmlExportTemplate.ts  Standalone HTML export template
+│   │
+│   ├── hotkeys/                   Collecting, categorising, formatting, sorting, filtering hotkey data
+│   │   ├── hotkeyCollector.ts     Data layer — merges defaultKeys + customKeys, categorises, sorts
+│   │   ├── categories.ts          Curated prefix → category map and display order
+│   │   ├── keyDisplay.ts          OS-aware modifier/key display formatting
+│   │   ├── sortHotkeys.ts         The 5 sort modes (category/modifier/key/most-used-*)
+│   │   └── filterHotkeys.ts       Search + modifier-filter matching
+│   │
+│   ├── usage/                     Shortcut usage tracking pipeline
+│   │   ├── usageTracker.ts        Capture keydown → signature, debounce persistence to usage-data.json
+│   │   ├── usageResolver.ts       Joins hotkey entries against captured usage counts
+│   │   └── usageGlyph.ts          Maps a usage count to one of 8 bar-glyph levels
+│   │
 │   └── i18n/
-│       ├── en.json          English strings
-│       ├── fr.json          French strings
-│       └── es.json          Spanish strings
+│       ├── i18n.ts                Locale detection and t() helper
+│       └── locales/
+│           ├── en.json            English strings
+│           ├── fr.json            French strings
+│           └── es.json            Spanish strings
 └── css/
-    └── styles.css           All plugin styles (Obsidian CSS vars, no hardcoded colours)
+    └── styles.css                 All plugin styles (Obsidian CSS vars, no hardcoded colours)
 ```
 
 ### How hotkey data is collected
@@ -142,11 +181,11 @@ The plugin UI is available in **English** (default), **French**, and **Spanish**
 
 To add a new language:
 
-1. Copy `src/ts/i18n/en.json` to `src/ts/i18n/<code>.json` (e.g. `de.json`)
+1. Copy `src/ts/i18n/locales/en.json` to `src/ts/i18n/locales/<code>.json` (e.g. `de.json`)
 2. Translate all values — keys must stay identical to `en.json`
-3. Import and register it in `src/ts/i18n.ts`:
+3. Import and register it in `src/ts/i18n/i18n.ts`:
    ```ts
-   import de from "./i18n/de.json";
+   import de from "./locales/de.json";
    const locales = { en, fr, es, de };
    ```
 4. Rebuild: `npm run build`
