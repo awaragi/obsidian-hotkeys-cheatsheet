@@ -15,7 +15,12 @@ export interface CategoryGroup {
   entries: HotkeyEntry[];
 }
 
-export type SortMode = "category" | "most-used-category" | "most-used-shortcut";
+export type SortMode =
+  | "category"
+  | "modifier"
+  | "key"
+  | "most-used-category"
+  | "most-used-shortcut";
 
 export interface HotkeysCheatsheetSettings {
   showRibbonIcon: boolean;

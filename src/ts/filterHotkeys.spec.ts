@@ -81,6 +81,7 @@ function makeFlatItem(overrides: Partial<FlatHotkeyItem>): FlatHotkeyItem {
     name: "Toggle Bold",
     hotkeys: [{ modifiers: ["Mod"], key: "B" }],
     count: 3,
+    bindingCounts: [3],
     isOrphan: false,
     ...overrides,
   };

@@ -8,7 +8,13 @@ import { fillTemplate, renderHtmlSections, escapeMarkdownTableCell } from "./htm
 import { getUsageCounts } from "./usageTracker";
 import { resolveUsage, type UsageResolution } from "./usageResolver";
 import { countToGlyph } from "./usageGlyph";
-import { sortByMostUsedCategory, sortByMostUsedShortcut, type FlatHotkeyItem } from "./sortHotkeys";
+import {
+  sortByMostUsedCategory,
+  sortByMostUsedShortcut,
+  sortByKeyFlat,
+  groupByModifier,
+  type FlatHotkeyItem,
+} from "./sortHotkeys";
 
 const EXPORT_FILENAME = "Hotkeys Cheatsheet.md";
 const EXPORT_HTML_FILENAME = "Hotkeys Cheatsheet.html";
@@ -41,9 +47,15 @@ export class CheatsheetModal extends Modal {
 
   private collapseToggleBtn!: HTMLButtonElement;
 
-  // Collapse state: category names in this set are collapsed.
-  // Empty on every modal open (all expanded by default).
+  // Collapse state: group labels (category names, or key/modifier group labels
+  // depending on sort mode) in this set are collapsed.
+  // Empty on every modal open (all expanded by default), and on every sort-mode change.
   private collapsedSections = new Set<string>();
+
+  // Labels of the groups rendered in the current sort mode ([] while a flat
+  // mode is active). Drives the collapse/expand-all toggle so it reflects
+  // whichever grouping is currently on screen, not always the raw categories.
+  private currentGroupLabels: string[] = [];
 
   // Snapshot of collapsedSections taken when search becomes active,
   // restored when search is cleared.
@@ -94,6 +106,7 @@ export class CheatsheetModal extends Modal {
 
     this.groups = collectHotkeys(this.app);
     this.usageResolution = resolveUsage(this.groups, getUsageCounts());
+    this.currentGroupLabels = this.groups.map((g) => g.category);
     this.buildUI();
     activeDocument.addEventListener("click", this.handleOutsideClick);
   }
@@ -239,14 +252,14 @@ export class CheatsheetModal extends Modal {
       cls: "hkc-icon-btn",
     });
     this.collapseToggleBtn.addEventListener("click", () => {
-      const allCollapsed = this.groups.every((g) =>
-        this.collapsedSections.has(g.category)
+      const allCollapsed = this.currentGroupLabels.every((label) =>
+        this.collapsedSections.has(label)
       );
       if (allCollapsed) {
         this.collapsedSections.clear();
       } else {
-        for (const group of this.groups) {
-          this.collapsedSections.add(group.category);
+        for (const label of this.currentGroupLabels) {
+          this.collapsedSections.add(label);
         }
       }
       this.renderGrid();
@@ -264,11 +277,22 @@ export class CheatsheetModal extends Modal {
       cls: "hkc-sort-dropdown hkc-hidden",
     });
 
-    const modes: { mode: SortMode; labelKey: "modal.sort_category" | "modal.sort_most_used_category" | "modal.sort_most_used_shortcut" }[] = [
+    type SortLabelKey =
+      | "modal.sort_category"
+      | "modal.sort_modifier"
+      | "modal.sort_key"
+      | "modal.sort_most_used_category"
+      | "modal.sort_most_used_shortcut";
+
+    const modes: { mode: SortMode; labelKey: SortLabelKey }[] = [
       { mode: "category", labelKey: "modal.sort_category" },
+      { mode: "modifier", labelKey: "modal.sort_modifier" },
+      { mode: "key", labelKey: "modal.sort_key" },
       { mode: "most-used-category", labelKey: "modal.sort_most_used_category" },
       { mode: "most-used-shortcut", labelKey: "modal.sort_most_used_shortcut" },
     ];
+
+    const usageDependentModes: SortMode[] = ["most-used-category", "most-used-shortcut"];
 
     this.sortItems = [];
     for (const { mode, labelKey } of modes) {
@@ -276,7 +300,7 @@ export class CheatsheetModal extends Modal {
       item.setText(t(labelKey));
       item.dataset.mode = mode;
 
-      const usageDependent = mode !== "category";
+      const usageDependent = usageDependentModes.includes(mode);
       if (usageDependent && !this.settings.trackShortcutUsage) {
         item.addClass("hkc-sort-item--disabled");
         item.setAttribute("aria-label", t("modal.sort_disabled_hint"));
@@ -285,6 +309,7 @@ export class CheatsheetModal extends Modal {
           this.sortMode = mode;
           this.sortOpen = false;
           this.sortDropdown.addClass("hkc-hidden");
+          this.collapsedSections.clear();
           this.updateSortItems();
           this.updateToolbarState();
           this.renderGrid();
@@ -313,7 +338,7 @@ export class CheatsheetModal extends Modal {
 
   private updateToolbarState() {
     const searching = this.searchQuery !== "";
-    const flatMode = this.sortMode === "most-used-shortcut";
+    const flatMode = this.sortMode === "most-used-shortcut" || this.sortMode === "key";
     const disableCollapse = searching || flatMode;
     this.collapseToggleBtn.disabled = disableCollapse;
     this.collapseToggleBtn.toggleClass("hkc-btn-disabled", disableCollapse);
@@ -322,8 +347,8 @@ export class CheatsheetModal extends Modal {
 
   private updateCollapseToggle() {
     const allCollapsed =
-      this.groups.length > 0 &&
-      this.groups.every((g) => this.collapsedSections.has(g.category));
+      this.currentGroupLabels.length > 0 &&
+      this.currentGroupLabels.every((label) => this.collapsedSections.has(label));
     if (allCollapsed) {
       setIcon(this.collapseToggleBtn, "chevrons-up-down");
       this.collapseToggleBtn.setAttribute("aria-label", t("modal.expand_all"));
@@ -454,15 +479,16 @@ export class CheatsheetModal extends Modal {
     const showUsage = this.settings.trackShortcutUsage;
     let totalVisible = 0;
 
-    if (this.sortMode === "most-used-shortcut") {
-      const flatItems = sortByMostUsedShortcut(
-        this.usageResolution.groups,
-        this.usageResolution.orphans
-      );
+    if (this.sortMode === "most-used-shortcut" || this.sortMode === "key") {
+      const flatItems =
+        this.sortMode === "most-used-shortcut"
+          ? sortByMostUsedShortcut(this.usageResolution.groups, this.usageResolution.orphans)
+          : sortByKeyFlat(this.usageResolution.groups);
       const visibleItems = flatItems.filter((item) =>
         matchesFlatItem(item, query, this.activeModifiers)
       );
       totalVisible = visibleItems.length;
+      this.currentGroupLabels = [];
       if (visibleItems.length > 0) {
         this.renderFlatList(el, visibleItems, query, showUsage);
       }
@@ -470,7 +496,11 @@ export class CheatsheetModal extends Modal {
       const orderedGroups =
         this.sortMode === "most-used-category"
           ? sortByMostUsedCategory(this.usageResolution.groups)
-          : this.usageResolution.groups;
+          : this.sortMode === "modifier"
+            ? groupByModifier(this.usageResolution.groups)
+            : this.usageResolution.groups;
+
+      this.currentGroupLabels = orderedGroups.map((g) => g.category);
 
       for (const group of orderedGroups) {
         const visibleEntries = group.entries.filter((entry) =>
@@ -487,6 +517,7 @@ export class CheatsheetModal extends Modal {
         this.renderCategorySection(
           el,
           group.category,
+          this.groupHeadingLabel(group.category),
           group.aggregate,
           visibleEntries,
           query,
@@ -504,11 +535,26 @@ export class CheatsheetModal extends Modal {
     this.updateCollapseToggle();
   }
 
+  /**
+   * Translates a group's raw `category` label into display text. For "By
+   * Category"/"By Most-Used Category" the label already is the category name.
+   * For "By Modifier" it's the canonical combo string (e.g. "Mod+Shift", or ""
+   * for no modifiers), shown as joined platform-aware modifier labels.
+   */
+  private groupHeadingLabel(category: string): string {
+    if (this.sortMode === "modifier") {
+      if (category === "") return t("modal.sort_no_modifier");
+      return category.split("+").map(modLabel).join(" + ");
+    }
+    return category;
+  }
+
   private renderCategorySection(
     parent: HTMLElement,
     category: string,
+    headingLabel: string,
     aggregate: number,
-    entries: { id: string; name: string; hotkeys: HotkeyBinding[]; count: number }[],
+    entries: { id: string; name: string; hotkeys: HotkeyBinding[]; bindingCounts: number[] }[],
     query: string,
     isCollapsed: boolean,
     isSearching: boolean,
@@ -523,7 +569,7 @@ export class CheatsheetModal extends Modal {
     // Arrow indicator
     const arrow = heading.createSpan({ cls: "hkc-collapse-arrow" });
     arrow.textContent = isCollapsed ? "▸" : "▾";
-    heading.appendText(" " + category);
+    heading.appendText(" " + headingLabel);
 
     if (showUsage && aggregate > 0) {
       this.renderUsageIndicator(heading, aggregate, this.usageResolution.maxCategoryAggregate, "hkc-usage-category");
@@ -545,7 +591,7 @@ export class CheatsheetModal extends Modal {
     if (isCollapsed) return;
 
     for (const entry of entries) {
-      this.renderHotkeyEntryRow(section, entry.name, entry.hotkeys, entry.count, query, showUsage);
+      this.renderHotkeyEntryRow(section, entry.name, entry.hotkeys, entry.bindingCounts, query, showUsage);
     }
   }
 
@@ -561,7 +607,7 @@ export class CheatsheetModal extends Modal {
         section,
         item.isOrphan ? t("modal.no_command") : item.name,
         item.hotkeys,
-        item.count,
+        item.bindingCounts,
         query,
         showUsage,
         { muted: item.isOrphan, disableKeyHighlight: item.isOrphan }
@@ -569,12 +615,19 @@ export class CheatsheetModal extends Modal {
     }
   }
 
-  /** Renders one entry row (name + optional usage indicator + hotkey badges). Shared by category and flat rendering. */
+  /**
+   * Renders one entry row (name + hotkey badges, each with its own usage
+   * indicator). Shared by category and flat rendering. `bindingCounts` is
+   * parallel to `hotkeys` — each binding shows its own usage count, not a
+   * single aggregate shared across every badge (a command bound to two
+   * hotkeys used 11 and 5 times shows 11 next to one and 5 next to the
+   * other, not 16 next to both).
+   */
   private renderHotkeyEntryRow(
     parent: HTMLElement,
     name: string,
     hotkeys: HotkeyBinding[],
-    count: number,
+    bindingCounts: number[],
     query: string,
     showUsage: boolean,
     options: { muted?: boolean; disableKeyHighlight?: boolean } = {}
@@ -592,17 +645,22 @@ export class CheatsheetModal extends Modal {
       nameEl.textContent = name;
     }
 
-    if (showUsage && count > 0) {
-      this.renderUsageIndicator(entryEl, count, this.usageResolution.maxEntryCount, "hkc-usage-entry");
-    }
-
-    // Hotkey badge rows
+    // Hotkey badge rows, each with its own usage indicator
     const hotkeysEl = entryEl.createDiv({ cls: "hkc-entry-hotkeys" });
-    for (const hk of hotkeys) {
+    hotkeys.forEach((hk, index) => {
       const keyMatches =
         !options.disableKeyHighlight && query.length > 0 && hk.key.toLowerCase() === query;
 
       const hkRow = hotkeysEl.createDiv({ cls: "hkc-hk-row" });
+
+      // Usage indicator comes first (left) so the kbd badges after it stay
+      // flush against the row's right edge regardless of the indicator's
+      // width — every row's key combo lines up in the same column.
+      const count = bindingCounts[index];
+      if (showUsage && count > 0) {
+        this.renderUsageIndicator(hkRow, count, this.usageResolution.maxEntryCount, "hkc-usage-entry");
+      }
+
       for (const mod of hk.modifiers) {
         hkRow.createEl("kbd", { text: modLabel(mod), cls: "hkc-kbd" });
       }
@@ -613,7 +671,7 @@ export class CheatsheetModal extends Modal {
       if (keyMatches) {
         keyEl.addClass("hkc-kbd-match");
       }
-    }
+    });
   }
 
   /** Renders a single glyph+count usage indicator, scaled against `max`. */

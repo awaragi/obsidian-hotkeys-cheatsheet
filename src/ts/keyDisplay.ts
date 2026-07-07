@@ -69,3 +69,23 @@ export const KEY_ICONS: Record<string, string> = {
 export function keyIcon(key: string): string {
   return KEY_ICONS[key] ?? key;
 }
+
+/** Special/non-printable keys sort before ordinary character keys, in this order; used by `compareKeys`. */
+const SPECIAL_KEY_ORDER = Object.keys(KEY_ICONS);
+
+/**
+ * Orders two raw (already-uppercased) key values for display: special keys
+ * (arrows, Enter, Escape, Tab, ...) sort before ordinary character keys, in
+ * `SPECIAL_KEY_ORDER`; ordinary keys sort alphabetically among themselves.
+ * Shared by any view that orders hotkeys by key, so the "special keys float
+ * to the top" rule stays consistent everywhere.
+ */
+export function compareKeys(a: string, b: string): number {
+  const aIndex = SPECIAL_KEY_ORDER.indexOf(a);
+  const bIndex = SPECIAL_KEY_ORDER.indexOf(b);
+  const aSpecial = aIndex !== -1;
+  const bSpecial = bIndex !== -1;
+  if (aSpecial && bSpecial) return aIndex - bIndex;
+  if (aSpecial !== bSpecial) return aSpecial ? -1 : 1;
+  return a.localeCompare(b);
+}

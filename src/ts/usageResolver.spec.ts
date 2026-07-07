@@ -58,6 +58,29 @@ describe("resolveUsage", () => {
     expect(resolved[0].entries[0].count).toBe(7);
   });
 
+  it("keeps each binding's own count available separately from the entry's aggregate", () => {
+    const groups: CategoryGroup[] = [
+      {
+        category: "Editing",
+        entries: [
+          {
+            id: "editor:bold",
+            name: "Toggle Bold",
+            category: "Editing",
+            hotkeys: [
+              { modifiers: ["Mod"], key: "K" },
+              { modifiers: ["Mod", "Shift"], key: "K" },
+            ],
+          },
+        ],
+      },
+    ];
+    const { groups: resolved } = resolveUsage(groups, { "Mod+K": 11, "Mod+Shift+K": 5 });
+    const entry = resolved[0].entries[0];
+    expect(entry.count).toBe(16);
+    expect(entry.bindingCounts).toEqual([11, 5]);
+  });
+
   it("computes a category aggregate as the sum of its entries' counts", () => {
     const { groups } = resolveUsage(makeGroups(), { "Mod+B": 5, "Mod+I": 2 });
     expect(groups[0].aggregate).toBe(7);

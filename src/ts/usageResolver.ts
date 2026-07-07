@@ -3,6 +3,8 @@ import { buildSignature, parseSignature } from "./usageTracker";
 
 export interface ResolvedHotkeyEntry extends HotkeyEntry {
   count: number;
+  /** Usage count for each individual binding in `hotkeys`, same order/length — distinct from `count`, which is their sum. */
+  bindingCounts: number[];
 }
 
 export interface ResolvedCategoryGroup {
@@ -42,16 +44,17 @@ export function resolveUsage(
     let aggregate = 0;
     const entries: ResolvedHotkeyEntry[] = group.entries.map((entry) => {
       let count = 0;
+      const bindingCounts: number[] = [];
       for (const hk of entry.hotkeys) {
         const signature = buildSignature(hk.modifiers, hk.key);
-        if (signature in counts) {
-          count += counts[signature];
-          matchedSignatures.add(signature);
-        }
+        const bindingCount = counts[signature] ?? 0;
+        if (signature in counts) matchedSignatures.add(signature);
+        bindingCounts.push(bindingCount);
+        count += bindingCount;
       }
       aggregate += count;
       if (count > maxEntryCount) maxEntryCount = count;
-      return { ...entry, count };
+      return { ...entry, count, bindingCounts };
     });
     if (aggregate > maxCategoryAggregate) maxCategoryAggregate = aggregate;
     return { category: group.category, entries, aggregate };

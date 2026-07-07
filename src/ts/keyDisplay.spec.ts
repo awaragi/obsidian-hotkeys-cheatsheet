@@ -6,7 +6,7 @@ vi.mock("obsidian", () => ({
   },
 }));
 
-import { modLabel, filterLabel, keyIcon } from "./keyDisplay";
+import { modLabel, filterLabel, keyIcon, compareKeys } from "./keyDisplay";
 import { Platform } from "obsidian";
 
 const platform = Platform as { isMacOS: boolean };
@@ -77,5 +77,26 @@ describe("keyIcon", () => {
 
   it("passes through an unknown key unchanged", () => {
     expect(keyIcon("F5")).toBe("F5");
+  });
+});
+
+describe("compareKeys", () => {
+  it("sorts a special key before an ordinary character key", () => {
+    expect(compareKeys("ESCAPE", "B")).toBeLessThan(0);
+    expect(compareKeys("B", "ESCAPE")).toBeGreaterThan(0);
+  });
+
+  it("sorts ordinary character keys alphabetically", () => {
+    expect(compareKeys("B", "C")).toBeLessThan(0);
+    expect(["C", "A", "B"].sort(compareKeys)).toEqual(["A", "B", "C"]);
+  });
+
+  it("orders special keys by their fixed priority, not alphabetically", () => {
+    // ARROWUP comes before ENTER in KEY_ICONS/SPECIAL_KEY_ORDER, despite "A" > "E" alphabetically.
+    expect(compareKeys("ARROWUP", "ENTER")).toBeLessThan(0);
+  });
+
+  it("treats equal keys as equal", () => {
+    expect(compareKeys("B", "B")).toBe(0);
   });
 });
