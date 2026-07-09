@@ -227,7 +227,6 @@ Planned features and improvements for future releases:
 - **Enhanced sort UI** — improve sorting controls to display active sort mode as prominently as modifier filters
 - **Persist filter & sort state** — remember last filtering and sorting preferences via configurable settings (never remember, per-session, 5-minute timeout, or always remember)
 - **Quick hotkey editor** — jump directly to the hotkey editor from any cheatsheet entry and auto-filter by selected hotkey
-- **Improve display responsiveness** — enhance filtering performance and optimize rendering, especially during search interactions
 - **Add links to the plugin** — include helpful links in the UI and documentation
 - **Compact/comfortable density toggle** — switch between a denser layout (smaller row height, tighter columns) and the current spacing, for users with many commands or small windows - setting should be configurable in the plugin settings
 - **Keyboard-only navigation within the modal** — arrow/Tab navigation between entries with a visible focus ring, without touching the mouse; pairs with the planned quick hotkey editor for an Enter-to-jump flow
