@@ -1,4 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+vi.mock("obsidian", () => ({
+  Keymap: { isModifier: () => false },
+  debounce: (cb: (...args: unknown[]) => unknown) => cb,
+  normalizePath: (p: string) => p,
+}));
+
 import { toTitleCase, categorise, stripCategoryPrefix, buildHotkeyGroups } from "./hotkeyCollector";
 
 describe("toTitleCase", () => {
@@ -137,5 +144,52 @@ describe("buildHotkeyGroups", () => {
     };
     const groups = buildHotkeyGroups({ "my-plugin:open": [{ modifiers: ["Mod"], key: "p" }] }, {}, cmds);
     expect(groups[0].entries[0].name).toBe("Open My Plugin");
+  });
+});
+
+describe("buildHotkeyGroups isModifiedFromDefault", () => {
+  const commands = {
+    "editor:toggle-bold": { id: "editor:toggle-bold", name: "Toggle Bold" },
+  };
+
+  it("is not modified when the effective binding exactly matches the default", () => {
+    const defaultKeys = { "editor:toggle-bold": [{ modifiers: ["Mod"], key: "b" }] };
+    const customKeys = { "editor:toggle-bold": [{ modifiers: ["Mod"], key: "B" }] };
+    const groups = buildHotkeyGroups(defaultKeys, customKeys, commands);
+    expect(groups[0].entries[0].isModifiedFromDefault).toBe(false);
+  });
+
+  it("is modified when the user added a binding beyond the default (superset)", () => {
+    const defaultKeys = { "editor:toggle-bold": [{ modifiers: ["Mod"], key: "b" }] };
+    const customKeys = {
+      "editor:toggle-bold": [
+        { modifiers: ["Mod"], key: "b" },
+        { modifiers: ["Ctrl", "Shift"], key: "b" },
+      ],
+    };
+    const groups = buildHotkeyGroups(defaultKeys, customKeys, commands);
+    expect(groups[0].entries[0].isModifiedFromDefault).toBe(true);
+  });
+
+  it("is modified when the binding was remapped entirely (disjoint set)", () => {
+    const defaultKeys = { "editor:toggle-bold": [{ modifiers: ["Mod"], key: "b" }] };
+    const customKeys = { "editor:toggle-bold": [{ modifiers: ["Ctrl"], key: "x" }] };
+    const groups = buildHotkeyGroups(defaultKeys, customKeys, commands);
+    expect(groups[0].entries[0].isModifiedFromDefault).toBe(true);
+  });
+
+  it("is modified when the command has no defaultKeys entry at all", () => {
+    const defaultKeys = {};
+    const customKeys = { "editor:toggle-bold": [{ modifiers: ["Mod"], key: "b" }] };
+    const groups = buildHotkeyGroups(defaultKeys, customKeys, commands);
+    expect(groups[0].entries[0].isModifiedFromDefault).toBe(true);
+  });
+
+  it("fully-cleared defaults remain excluded, unaffected by this flag", () => {
+    const defaultKeys = { "editor:toggle-bold": [{ modifiers: ["Mod"], key: "b" }] };
+    const customKeys = { "editor:toggle-bold": [] };
+    const groups = buildHotkeyGroups(defaultKeys, customKeys, commands);
+    const allEntries = groups.flatMap((g) => g.entries);
+    expect(allEntries.find((e) => e.id === "editor:toggle-bold")).toBeUndefined();
   });
 });

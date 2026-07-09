@@ -163,6 +163,30 @@ export class Toolbar {
       });
     }
 
+    this.filterDropdown.createDiv({ cls: "hkc-filter-divider" });
+
+    const conflictsLabel = this.filterDropdown.createEl("label", {
+      cls: "hkc-filter-item",
+    });
+    const conflictsCheckbox = conflictsLabel.createEl("input", { type: "checkbox" });
+    conflictsLabel.appendText(" " + t("modal.filter_conflicts_only"));
+    conflictsCheckbox.addEventListener("change", () => {
+      this.state.setConflictsOnly(conflictsCheckbox.checked);
+      this.updateFilterBtn();
+      this.callbacks.onChange();
+    });
+
+    const modifiedLabel = this.filterDropdown.createEl("label", {
+      cls: "hkc-filter-item",
+    });
+    const modifiedCheckbox = modifiedLabel.createEl("input", { type: "checkbox" });
+    modifiedLabel.appendText(" " + t("modal.filter_modified_only"));
+    modifiedCheckbox.addEventListener("change", () => {
+      this.state.setModifiedOnly(modifiedCheckbox.checked);
+      this.updateFilterBtn();
+      this.callbacks.onChange();
+    });
+
     this.filterBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       this.filterOpen = !this.filterOpen;
@@ -275,17 +299,27 @@ export class Toolbar {
   private updateFilterBtn() {
     const btn = this.filterBtn;
     btn.empty();
-    if (this.state.activeModifiers.size === 0) {
+    const hasModifierChips = this.state.activeModifiers.size > 0;
+    const hasOtherActiveFilter = this.state.conflictsOnly || this.state.modifiedOnly;
+
+    if (!hasModifierChips && !hasOtherActiveFilter) {
       btn.setText(t("modal.filter_label"));
       btn.removeClass("hkc-filter-btn--active");
-    } else {
-      for (const mod of ["Mod", "Shift", "Alt", "Ctrl"] as const) {
-        if (this.state.activeModifiers.has(mod)) {
-          btn.createEl("kbd", { text: filterLabel(mod), cls: "hkc-filter-chip" });
-        }
-      }
-      btn.createSpan({ text: " ▾" });
-      btn.addClass("hkc-filter-btn--active");
+      return;
     }
+
+    for (const mod of ["Mod", "Shift", "Alt", "Ctrl"] as const) {
+      if (this.state.activeModifiers.has(mod)) {
+        btn.createEl("kbd", { text: filterLabel(mod), cls: "hkc-filter-chip" });
+      }
+    }
+    if (this.state.conflictsOnly) {
+      btn.createSpan({ text: t("modal.filter_conflicts_chip"), cls: "hkc-filter-chip hkc-filter-chip--tag" });
+    }
+    if (this.state.modifiedOnly) {
+      btn.createSpan({ text: t("modal.filter_modified_chip"), cls: "hkc-filter-chip hkc-filter-chip--tag" });
+    }
+    btn.createSpan({ text: " ▾" });
+    btn.addClass("hkc-filter-btn--active");
   }
 }

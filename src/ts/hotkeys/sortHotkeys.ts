@@ -12,6 +12,9 @@ export interface FlatHotkeyItem {
   /** Usage count for each binding in `hotkeys`, same order/length — used to render a per-badge count instead of one shared aggregate. */
   bindingCounts: number[];
   isOrphan: boolean;
+  isModifiedFromDefault: boolean;
+  /** The real command id — distinct from `id` when this row is a per-binding composite (e.g. `"cmd::0"` from `sortByKeyFlat`). */
+  commandId: string;
 }
 
 /** Existing default order — curated category order, entries alphabetical within each. Unchanged. */
@@ -45,6 +48,8 @@ export function sortByMostUsedShortcut(
       count: entry.count,
       bindingCounts: entry.bindingCounts,
       isOrphan: false,
+      isModifiedFromDefault: entry.isModifiedFromDefault,
+      commandId: entry.id,
     }))
   );
 
@@ -55,6 +60,8 @@ export function sortByMostUsedShortcut(
     count: orphan.count,
     bindingCounts: [orphan.count],
     isOrphan: true,
+    isModifiedFromDefault: false,
+    commandId: orphan.signature,
   }));
 
   return [...entryItems, ...orphanItems].sort((a, b) => b.count - a.count);
@@ -66,6 +73,9 @@ interface ExplodedBinding {
   name: string;
   hotkey: HotkeyBinding;
   count: number;
+  isModifiedFromDefault: boolean;
+  /** The real command id — `id` is a per-binding composite (`"cmd::0"`) here. */
+  commandId: string;
 }
 
 /**
@@ -83,6 +93,8 @@ function explodeEntryBindings(groups: ResolvedCategoryGroup[]): ExplodedBinding[
         name: entry.name,
         hotkey,
         count: entry.bindingCounts[index],
+        isModifiedFromDefault: entry.isModifiedFromDefault,
+        commandId: entry.id,
       }))
     )
   );
@@ -128,6 +140,8 @@ export function sortByKeyFlat(groups: ResolvedCategoryGroup[]): FlatHotkeyItem[]
       count: row.count,
       bindingCounts: [row.count],
       isOrphan: false,
+      isModifiedFromDefault: row.isModifiedFromDefault,
+      commandId: row.commandId,
     }));
 }
 
@@ -167,6 +181,8 @@ export function groupByModifier(groups: ResolvedCategoryGroup[]): ResolvedCatego
         hotkeys: [row.hotkey],
         count: row.count,
         bindingCounts: [row.count],
+        isModifiedFromDefault: row.isModifiedFromDefault,
+        commandId: row.commandId,
       }));
       return { category: combo, entries, aggregate: sumCounts(entries) };
     });

@@ -48,7 +48,11 @@ export class GridRenderer {
           ? sortByMostUsedShortcut(this.state.usageResolution.groups, this.state.usageResolution.orphans)
           : sortByKeyFlat(this.state.usageResolution.groups);
       const visibleItems = flatItems.filter((item) =>
-        matchesFlatItem(item, query, this.state.activeModifiers)
+        matchesFlatItem(item, query, this.state.activeModifiers, {
+          conflictsOnly: this.state.conflictsOnly,
+          modifiedOnly: this.state.modifiedOnly,
+          conflictingIds: this.state.conflictingIds,
+        })
       );
       totalVisible = visibleItems.length;
       this.state.setCurrentGroupLabels([]);
@@ -67,7 +71,11 @@ export class GridRenderer {
 
       for (const group of orderedGroups) {
         const visibleEntries = group.entries.filter((entry) =>
-          matchesFilters(entry, query, this.state.activeModifiers)
+          matchesFilters(entry, query, this.state.activeModifiers, {
+            conflictsOnly: this.state.conflictsOnly,
+            modifiedOnly: this.state.modifiedOnly,
+            conflictingIds: this.state.conflictingIds,
+          })
         );
 
         if (visibleEntries.length === 0) continue;

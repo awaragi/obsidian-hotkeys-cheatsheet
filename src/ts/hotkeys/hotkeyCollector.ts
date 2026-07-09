@@ -1,8 +1,30 @@
 import { App } from "obsidian";
 import { CORE_PREFIX_MAP, CATEGORY_ORDER } from "./categories";
 import type { HotkeyBinding, HotkeyEntry, CategoryGroup } from "../types";
+import { buildSignature } from "../usage/usageTracker";
 
 export type { HotkeyBinding, HotkeyEntry, CategoryGroup };
+
+/** Canonical modifier+key signatures for a binding list, as a set (order-independent). */
+function signatureSet(bindings: HotkeyBinding[]): Set<string> {
+  return new Set(bindings.map((hk) => buildSignature(hk.modifiers, hk.key)));
+}
+
+/** True if `effective` differs (as a set of canonical signatures) from `defaultKeys[id]` — or `id` has no default at all. */
+function isModifiedFromDefault(
+  id: string,
+  effective: HotkeyBinding[],
+  defaultKeys: Record<string, HotkeyBinding[]>
+): boolean {
+  if (!(id in defaultKeys)) return true;
+  const defaultSet = signatureSet(defaultKeys[id]);
+  const effectiveSet = signatureSet(effective);
+  if (defaultSet.size !== effectiveSet.size) return true;
+  for (const sig of defaultSet) {
+    if (!effectiveSet.has(sig)) return true;
+  }
+  return false;
+}
 
 /** Convert a hyphen/underscore/space-separated string to Title Case. */
 export function toTitleCase(str: string): string {
@@ -87,6 +109,7 @@ export function buildHotkeyGroups(
       name,
       category,
       hotkeys: normalisedHotkeys,
+      isModifiedFromDefault: isModifiedFromDefault(id, hotkeys, defaultKeys),
     });
   }
 

@@ -18,6 +18,7 @@ Obsidian's built-in hotkey settings show a flat alphabetical list of 250+ comman
 - **Search clear button** — `×` button inside the search field clears the query instantly
 - **Modifier filter** — dropdown to show only hotkeys that include specific modifiers (AND logic: select Cmd + Shift to find all `Cmd Shift` combos)
 - **Modifier filter chips** — active modifier filters are shown directly on the filter button as flat `<kbd>` chips
+- **Conflict & modified-from-default filters** — "Conflicts only" shows commands whose binding collides with another command's (Obsidian silently allows this — only one wins at runtime); "Modified only" shows commands whose binding differs from Obsidian's shipped default
 - **Sort menu** — reorder the cheatsheet **By Category** (default), **By Modifier**, **By Key**, **By Most-Used Category**, or **By Most-Used Shortcut**; the last two need [usage tracking](#shortcut-usage-tracking-opt-in-fully-local) turned on
 - **Usage indicators** *(opt-in)* — small bar-glyph + count badges next to each shortcut and category heading, showing how often it's actually been pressed — see [Shortcut usage tracking](#shortcut-usage-tracking-opt-in-fully-local)
 - **Export menu** — toolbar export dropdown lets you save the cheatsheet as a note or export it as HTML
@@ -227,8 +228,6 @@ Planned features and improvements for future releases:
 - **Quick hotkey editor** — jump directly to the hotkey editor from any cheatsheet entry and auto-filter by selected hotkey
 - **Improve display responsiveness** — enhance filtering performance and optimize rendering, especially during search interactions
 - **Add links to the plugin** — include helpful links in the UI and documentation
-- **Duplicate/conflicting hotkey detection** — flag key combinations assigned to more than one command, since Obsidian silently allows this and only one binding wins at runtime
-- **Diff from Obsidian defaults** — filter/mode to show only commands where your binding differs from the shipped default (added, removed, or remapped), useful for auditing or sharing your keymap customizations
 - **Compact/comfortable density toggle** — switch between a denser layout (smaller row height, tighter columns) and the current spacing, for users with many commands or small windows - setting should be configurable in the plugin settings
 - **Keyboard-only navigation within the modal** — arrow/Tab navigation between entries with a visible focus ring, without touching the mouse; pairs with the planned quick hotkey editor for an Enter-to-jump flow
 

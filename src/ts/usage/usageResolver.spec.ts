@@ -14,8 +14,8 @@ function makeGroups(): CategoryGroup[] {
     {
       category: "Editing",
       entries: [
-        { id: "editor:bold", name: "Toggle Bold", category: "Editing", hotkeys: [{ modifiers: ["Mod"], key: "B" }] },
-        { id: "editor:italic", name: "Toggle Italic", category: "Editing", hotkeys: [{ modifiers: ["Mod"], key: "I" }] },
+        { id: "editor:bold", name: "Toggle Bold", category: "Editing", hotkeys: [{ modifiers: ["Mod"], key: "B" }], isModifiedFromDefault: false },
+        { id: "editor:italic", name: "Toggle Italic", category: "Editing", hotkeys: [{ modifiers: ["Mod"], key: "I" }], isModifiedFromDefault: false },
       ],
     },
   ];
@@ -50,6 +50,7 @@ describe("resolveUsage", () => {
               { modifiers: ["Mod"], key: "B" },
               { modifiers: ["Ctrl"], key: "B" },
             ],
+            isModifiedFromDefault: false,
           },
         ],
       },
@@ -71,6 +72,7 @@ describe("resolveUsage", () => {
               { modifiers: ["Mod"], key: "K" },
               { modifiers: ["Mod", "Shift"], key: "K" },
             ],
+            isModifiedFromDefault: false,
           },
         ],
       },

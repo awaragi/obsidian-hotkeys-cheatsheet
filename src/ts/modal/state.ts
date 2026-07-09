@@ -4,6 +4,7 @@ import type { UsageResolution } from "../usage/usageResolver";
 import { collectHotkeys } from "../hotkeys/hotkeyCollector";
 import { resolveUsage } from "../usage/usageResolver";
 import { getUsageCounts } from "../usage/usageTracker";
+import { resolveConflicts } from "../hotkeys/conflictDetector";
 
 export interface PendingOverwrite {
   path: string;
@@ -27,8 +28,11 @@ const EMPTY_USAGE_RESOLUTION: UsageResolution = {
 export class CheatsheetState {
   groups: CategoryGroup[] = [];
   usageResolution: UsageResolution = EMPTY_USAGE_RESOLUTION;
+  conflictingIds: Set<string> = new Set();
   searchQuery = "";
   activeModifiers: Set<string> = new Set();
+  conflictsOnly = false;
+  modifiedOnly = false;
   sortMode: SortMode = "category";
   collapsedSections = new Set<string>();
   currentGroupLabels: string[] = [];
@@ -50,6 +54,7 @@ export class CheatsheetState {
     this.sortMode = "category";
     this.groups = collectHotkeys(app);
     this.usageResolution = resolveUsage(this.groups, getUsageCounts());
+    this.conflictingIds = resolveConflicts(this.groups);
     this.currentGroupLabels = this.groups.map((g) => g.category);
   }
 
@@ -81,6 +86,14 @@ export class CheatsheetState {
     } else {
       this.activeModifiers.delete(mod);
     }
+  }
+
+  setConflictsOnly(active: boolean): void {
+    this.conflictsOnly = active;
+  }
+
+  setModifiedOnly(active: boolean): void {
+    this.modifiedOnly = active;
   }
 
   setSortMode(mode: SortMode): void {

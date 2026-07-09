@@ -5,6 +5,8 @@ export interface ResolvedHotkeyEntry extends HotkeyEntry {
   count: number;
   /** Usage count for each individual binding in `hotkeys`, same order/length — distinct from `count`, which is their sum. */
   bindingCounts: number[];
+  /** The real command id, when `id` has been replaced with a per-binding composite (e.g. by `groupByModifier`). Absent when `id` is already the real command id. */
+  commandId?: string;
 }
 
 export interface ResolvedCategoryGroup {

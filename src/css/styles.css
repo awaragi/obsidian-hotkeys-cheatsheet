@@ -130,6 +130,15 @@
   white-space: nowrap;
 }
 
+/* Non-modifier filters (Conflicts only / Modified only) — same chip shape as
+   modifier chips, but plain text rather than monospace since they're not a
+   literal keycap, tinted with the accent color to read as a distinct group. */
+.hkc-filter-chip--tag {
+  font-family: inherit;
+  color: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+}
+
 .hkc-filter-dropdown {
   position: absolute;
   top: calc(100% + 6px);
@@ -157,6 +166,7 @@
   font-size: var(--font-ui-small);
   color: var(--text-normal);
   user-select: none;
+  white-space: nowrap;
   transition: background 0.1s;
 }
 
@@ -167,6 +177,12 @@
 .hkc-filter-item input[type="checkbox"] {
   accent-color: var(--interactive-accent);
   cursor: pointer;
+}
+
+.hkc-filter-divider {
+  height: 1px;
+  margin: 6px 0;
+  background: var(--background-modifier-border);
 }
 
 /* ── Sort Control ─────────────────────────────────────────────────────────── */

@@ -21,15 +21,15 @@ function makeGroups(): ResolvedCategoryGroup[] {
       category: "Editing",
       aggregate: 3,
       entries: [
-        { id: "e1", name: "Toggle Bold", category: "Editing", hotkeys: [{ modifiers: ["Mod"], key: "B" }], count: 1, bindingCounts: [1] },
-        { id: "e2", name: "Toggle Italic", category: "Editing", hotkeys: [{ modifiers: ["Mod"], key: "I" }], count: 2, bindingCounts: [2] },
+        { id: "e1", name: "Toggle Bold", category: "Editing", hotkeys: [{ modifiers: ["Mod"], key: "B" }], count: 1, bindingCounts: [1], isModifiedFromDefault: false },
+        { id: "e2", name: "Toggle Italic", category: "Editing", hotkeys: [{ modifiers: ["Mod"], key: "I" }], count: 2, bindingCounts: [2], isModifiedFromDefault: false },
       ],
     },
     {
       category: "Navigation",
       aggregate: 10,
       entries: [
-        { id: "n1", name: "Go Back", category: "Navigation", hotkeys: [{ modifiers: ["Mod"], key: "["  }], count: 10, bindingCounts: [10] },
+        { id: "n1", name: "Go Back", category: "Navigation", hotkeys: [{ modifiers: ["Mod"], key: "["  }], count: 10, bindingCounts: [10], isModifiedFromDefault: false },
       ],
     },
   ];
@@ -73,6 +73,8 @@ describe("sortByMostUsedShortcut", () => {
       count: 52,
       bindingCounts: [52],
       isOrphan: true,
+      isModifiedFromDefault: false,
+      commandId: "Mod+Shift+K",
     });
     expect(result[0].id).toBe("Mod+Shift+K");
   });
@@ -90,7 +92,7 @@ function makeKeyModifierGroups(): ResolvedCategoryGroup[] {
       category: "Editing",
       aggregate: 20,
       entries: [
-        { id: "e1", name: "Toggle Bold", category: "Editing", hotkeys: [{ modifiers: ["Mod"], key: "B" }], count: 1, bindingCounts: [1] },
+        { id: "e1", name: "Toggle Bold", category: "Editing", hotkeys: [{ modifiers: ["Mod"], key: "B" }], count: 1, bindingCounts: [1], isModifiedFromDefault: false },
         {
           id: "e2",
           name: "Multi Bind",
@@ -101,15 +103,16 @@ function makeKeyModifierGroups(): ResolvedCategoryGroup[] {
           ],
           count: 16,
           bindingCounts: [11, 5],
+          isModifiedFromDefault: false,
         },
-        { id: "e3", name: "Ctrl Thing", category: "Editing", hotkeys: [{ modifiers: ["Ctrl"], key: "C" }], count: 3, bindingCounts: [3] },
+        { id: "e3", name: "Ctrl Thing", category: "Editing", hotkeys: [{ modifiers: ["Ctrl"], key: "C" }], count: 3, bindingCounts: [3], isModifiedFromDefault: false },
       ],
     },
     {
       category: "Navigation",
       aggregate: 2,
       entries: [
-        { id: "n1", name: "Cancel", category: "Navigation", hotkeys: [{ modifiers: [], key: "ESCAPE" }], count: 2, bindingCounts: [2] },
+        { id: "n1", name: "Cancel", category: "Navigation", hotkeys: [{ modifiers: [], key: "ESCAPE" }], count: 2, bindingCounts: [2], isModifiedFromDefault: false },
       ],
     },
   ];
@@ -162,8 +165,8 @@ describe("groupByModifier", () => {
         category: "Editing",
         aggregate: 2,
         entries: [
-          { id: "e1", name: "Toggle Bold", category: "Editing", hotkeys: [{ modifiers: ["Mod"], key: "B" }], count: 1, bindingCounts: [1] },
-          { id: "e2", name: "Confirm", category: "Editing", hotkeys: [{ modifiers: ["Mod"], key: "ENTER" }], count: 1, bindingCounts: [1] },
+          { id: "e1", name: "Toggle Bold", category: "Editing", hotkeys: [{ modifiers: ["Mod"], key: "B" }], count: 1, bindingCounts: [1], isModifiedFromDefault: false },
+          { id: "e2", name: "Confirm", category: "Editing", hotkeys: [{ modifiers: ["Mod"], key: "ENTER" }], count: 1, bindingCounts: [1], isModifiedFromDefault: false },
         ],
       },
     ];

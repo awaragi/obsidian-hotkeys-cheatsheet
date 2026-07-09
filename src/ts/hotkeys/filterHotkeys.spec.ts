@@ -5,9 +5,10 @@ import type { FlatHotkeyItem } from "./sortHotkeys";
 
 function makeEntry(
   name: string,
-  hotkeys: { modifiers: string[]; key: string }[]
+  hotkeys: { modifiers: string[]; key: string }[],
+  isModifiedFromDefault = false
 ): HotkeyEntry {
-  return { id: "test:cmd", name, category: "Test", hotkeys };
+  return { id: "test:cmd", name, category: "Test", hotkeys, isModifiedFromDefault };
 }
 
 describe("matchesFilters", () => {
@@ -83,9 +84,69 @@ function makeFlatItem(overrides: Partial<FlatHotkeyItem>): FlatHotkeyItem {
     count: 3,
     bindingCounts: [3],
     isOrphan: false,
+    isModifiedFromDefault: false,
+    commandId: "test:cmd",
     ...overrides,
   };
 }
+
+describe("matchesFilters conflicts/modified flags", () => {
+  it("returns true for a conflicting entry when conflictsOnly is active", () => {
+    const entry = makeEntry("Toggle Bold", [{ modifiers: ["Mod"], key: "B" }]);
+    expect(
+      matchesFilters(entry, "", new Set(), {
+        conflictsOnly: true,
+        conflictingIds: new Set(["test:cmd"]),
+      })
+    ).toBe(true);
+  });
+
+  it("returns false for a non-conflicting entry when conflictsOnly is active", () => {
+    const entry = makeEntry("Toggle Bold", [{ modifiers: ["Mod"], key: "B" }]);
+    expect(
+      matchesFilters(entry, "", new Set(), {
+        conflictsOnly: true,
+        conflictingIds: new Set(["other:cmd"]),
+      })
+    ).toBe(false);
+  });
+
+  it("returns false for an unmodified entry when modifiedOnly is active", () => {
+    const entry = makeEntry("Toggle Bold", [{ modifiers: ["Mod"], key: "B" }], false);
+    expect(matchesFilters(entry, "", new Set(), { modifiedOnly: true })).toBe(false);
+  });
+
+  it("returns true for a modified entry when modifiedOnly is active", () => {
+    const entry = makeEntry("Toggle Bold", [{ modifiers: ["Mod"], key: "B" }], true);
+    expect(matchesFilters(entry, "", new Set(), { modifiedOnly: true })).toBe(true);
+  });
+
+  it("AND-combines conflictsOnly and modifiedOnly — must satisfy both", () => {
+    const conflictingAndModified = makeEntry("A", [{ modifiers: ["Mod"], key: "B" }], true);
+    const conflictingOnly = { ...makeEntry("B", [{ modifiers: ["Mod"], key: "B" }], false), id: "other:cmd" };
+    const flags = { conflictsOnly: true, modifiedOnly: true, conflictingIds: new Set(["test:cmd", "other:cmd"]) };
+    expect(matchesFilters(conflictingAndModified, "", new Set(), flags)).toBe(true);
+    expect(matchesFilters(conflictingOnly, "", new Set(), flags)).toBe(false);
+  });
+
+  it("combines with an active modifier filter", () => {
+    const entry = makeEntry("Toggle Bold", [{ modifiers: ["Mod"], key: "B" }], true);
+    expect(
+      matchesFilters(entry, "", new Set(["Shift"]), { modifiedOnly: true })
+    ).toBe(false);
+  });
+
+  it("leaves prior filtering unaffected when both new flags are omitted/false", () => {
+    const entry = makeEntry("Toggle Bold", [{ modifiers: ["Mod"], key: "B" }]);
+    expect(matchesFilters(entry, "", new Set())).toBe(true);
+  });
+
+  it("combines with an active search query", () => {
+    const entry = makeEntry("Toggle Bold", [{ modifiers: ["Mod"], key: "B" }], true);
+    expect(matchesFilters(entry, "bold", new Set(), { modifiedOnly: true })).toBe(true);
+    expect(matchesFilters(entry, "italic", new Set(), { modifiedOnly: true })).toBe(false);
+  });
+});
 
 describe("matchesFlatItem", () => {
   it("matches a bound item like matchesFilters would", () => {
@@ -103,5 +164,46 @@ describe("matchesFlatItem", () => {
     const orphan = makeFlatItem({ isOrphan: true, name: "" });
     expect(matchesFlatItem(orphan, "", new Set(["Mod"]))).toBe(true);
     expect(matchesFlatItem(orphan, "", new Set(["Shift"]))).toBe(false);
+  });
+
+  it("returns true for a conflicting item when conflictsOnly is active", () => {
+    const item = makeFlatItem({ commandId: "test:cmd" });
+    expect(
+      matchesFlatItem(item, "", new Set(), {
+        conflictsOnly: true,
+        conflictingIds: new Set(["test:cmd"]),
+      })
+    ).toBe(true);
+  });
+
+  it("returns false for a non-conflicting item when conflictsOnly is active", () => {
+    const item = makeFlatItem({ commandId: "test:cmd" });
+    expect(
+      matchesFlatItem(item, "", new Set(), {
+        conflictsOnly: true,
+        conflictingIds: new Set(["other:cmd"]),
+      })
+    ).toBe(false);
+  });
+
+  it("returns false for an unmodified item when modifiedOnly is active", () => {
+    const item = makeFlatItem({ isModifiedFromDefault: false });
+    expect(matchesFlatItem(item, "", new Set(), { modifiedOnly: true })).toBe(false);
+  });
+
+  it("returns true for a modified item when modifiedOnly is active", () => {
+    const item = makeFlatItem({ isModifiedFromDefault: true });
+    expect(matchesFlatItem(item, "", new Set(), { modifiedOnly: true })).toBe(true);
+  });
+
+  it("excludes an orphan whenever conflictsOnly or modifiedOnly is active — an orphan's signature never appears in conflictingIds (real command ids only), and it's never modified", () => {
+    const orphan = makeFlatItem({ isOrphan: true, name: "", commandId: "Mod+Shift+K" });
+    expect(
+      matchesFlatItem(orphan, "", new Set(), {
+        conflictsOnly: true,
+        conflictingIds: new Set(["editor:bold", "editor:italic"]),
+      })
+    ).toBe(false);
+    expect(matchesFlatItem(orphan, "", new Set(), { modifiedOnly: true })).toBe(false);
   });
 });

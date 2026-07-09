@@ -8,6 +8,8 @@ export interface HotkeyEntry {
   name: string;
   category: string;
   hotkeys: HotkeyBinding[];
+  /** True if the effective binding set differs from Obsidian's shipped default (added and/or remapped), or the command has no shipped default at all. */
+  isModifiedFromDefault: boolean;
 }
 
 export interface CategoryGroup {
