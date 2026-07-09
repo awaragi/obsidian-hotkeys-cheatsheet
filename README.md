@@ -1,10 +1,10 @@
 # Hotkeys Cheatsheet
 
-A live, searchable reference card for all your Obsidian keyboard shortcuts — opened instantly from the ribbon or command palette.
+A live, searchable reference card for all your Obsidian keyboard shortcuts — opened instantly from the ribbon or command palette, with optional tracking of which ones you actually use.
 
 ## What it does
 
-Obsidian's built-in hotkey settings show a flat alphabetical list of 250+ commands. This plugin gives you a visual overview instead: a newspaper-style multi-column layout with every shortcut you have assigned, complete with `Cmd`, `Shift`, `Option`, `Ctrl` key badges rendered for your OS.
+Obsidian's built-in hotkey settings show a flat alphabetical list of 250+ commands. This plugin gives you a visual overview instead: a newspaper-style multi-column layout with every shortcut you have assigned, complete with `Cmd`, `Shift`, `Option`, `Ctrl` key badges rendered for your OS. Turn on [usage tracking](#shortcut-usage-tracking-opt-in-fully-local) and it'll also show you how often each one gets used.
 
 ![Hotkeys Cheatsheet modal](docs/screenshot.png)
 
@@ -16,15 +16,16 @@ Obsidian's built-in hotkey settings show a flat alphabetical list of 250+ comman
 - **Collapsible sections** — click any category heading to collapse or expand it; collapse/expand all with the icon button in the toolbar
 - **Real-time search** — filter by command name or key character (type `b` to find all `Cmd B`, `Cmd Shift B`, etc.); collapsed sections auto-expand while searching and restore when cleared
 - **Search clear button** — `×` button inside the search field clears the query instantly
-- **Modifier filter** — dropdown to show only hotkeys that include specific modifiers (AND logic: select Cmd + Shift to find all `Cmd Shift` combos)
-- **Modifier filter chips** — active modifier filters are shown directly on the filter button as flat `<kbd>` chips
+- **Filter menu** — narrow the list to hotkeys with specific modifiers (select Cmd + Shift to find all `Cmd Shift` combos); combine as many as you like, together with search
 - **Conflict & modified-from-default filters** — "Conflicts only" shows commands whose binding collides with another command's (Obsidian silently allows this — only one wins at runtime); "Modified only" shows commands whose binding differs from Obsidian's shipped default
+- **Active filters at a glance** — everything you've selected shows right on the filter button, so you always know what's currently narrowing the view
 - **Sort menu** — reorder the cheatsheet **By Category** (default), **By Modifier**, **By Key**, **By Most-Used Category**, or **By Most-Used Shortcut**; the last two need [usage tracking](#shortcut-usage-tracking-opt-in-fully-local) turned on
 - **Usage indicators** *(opt-in)* — small bar-glyph + count badges next to each shortcut and category heading, showing how often it's actually been pressed — see [Shortcut usage tracking](#shortcut-usage-tracking-opt-in-fully-local)
 - **Export menu** — toolbar export dropdown lets you save the cheatsheet as a note or export it as HTML
 - **OS-aware badges** — `Cmd`/`Option` on macOS, `Ctrl`/`Alt`/`Win` on Windows/Linux
 - **Special key icons** — arrow keys show ↑↓←→, Enter shows ↵, Backspace shows ⌫, Tab shows ⇥, etc.
 - **Theme-compatible** — uses Obsidian CSS variables, works with any light or dark theme
+- **Localised UI** — automatically matches Obsidian's language setting; available in English, French, and Spanish (see [Localisation](#localisation))
 - **Ribbon toggle** — hide or show the ribbon icon from Settings; the command palette entry always remains available
 - **Header close button** — close the modal with the `✕` button in the header
 
@@ -230,4 +231,4 @@ Planned features and improvements for future releases:
 - **Add links to the plugin** — include helpful links in the UI and documentation
 - **Compact/comfortable density toggle** — switch between a denser layout (smaller row height, tighter columns) and the current spacing, for users with many commands or small windows - setting should be configurable in the plugin settings
 - **Keyboard-only navigation within the modal** — arrow/Tab navigation between entries with a visible focus ring, without touching the mouse; pairs with the planned quick hotkey editor for an Enter-to-jump flow
-
+- **Expand localization** — add support for additional languages, including right-to-left (RTL) text and Asian character sets
