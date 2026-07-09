@@ -15,6 +15,8 @@ import type { CheatsheetState } from "./state";
 export interface GridRendererCallbacks {
   /** Called after every render — including ones triggered internally by a section-heading click. */
   onRendered(): void;
+  /** Called with a command's display name when a (non-orphan) entry's name is clicked, to jump to the native hotkey editor. */
+  onJumpToHotkey(name: string): void;
 }
 
 /**
@@ -209,6 +211,12 @@ export class GridRenderer {
       this.renderHighlighted(nameEl, name, query);
     } else {
       nameEl.textContent = name;
+    }
+
+    // Orphan rows have no bound command to jump to, so only real entries are clickable
+    if (!options.muted) {
+      nameEl.addClass("hkc-entry-name--clickable");
+      nameEl.addEventListener("click", () => this.callbacks.onJumpToHotkey(name));
     }
 
     // Hotkey badge rows, each with its own usage indicator

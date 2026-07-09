@@ -21,6 +21,7 @@ Obsidian's built-in hotkey settings show a flat alphabetical list of 250+ comman
 - **Active filters at a glance** — everything you've selected shows right on the filter button, so you always know what's currently narrowing the view
 - **Sort menu** — reorder the cheatsheet **By Category** (default), **By Modifier**, **By Key**, **By Most-Used Category**, or **By Most-Used Shortcut**; the last two need [usage tracking](#shortcut-usage-tracking-opt-in-fully-local) turned on
 - **Usage indicators** *(opt-in)* — small bar-glyph + count badges next to each shortcut and category heading, showing how often it's actually been pressed — see [Shortcut usage tracking](#shortcut-usage-tracking-opt-in-fully-local)
+- **Quick hotkey editor** — click any entry's command name to jump straight to Obsidian's native Settings → Hotkeys tab, pre-filtered to that command, ready to rebind
 - **Export menu** — toolbar export dropdown lets you save the cheatsheet as a note or export it as HTML
 - **OS-aware badges** — `Cmd`/`Option` on macOS, `Ctrl`/`Alt`/`Win` on Windows/Linux
 - **Special key icons** — arrow keys show ↑↓←→, Enter shows ↵, Backspace shows ⌫, Tab shows ⇥, etc.
@@ -226,8 +227,6 @@ Planned features and improvements for future releases:
 - **Special character filter** — add filter input to quickly find and display special keys (arrows, Enter, Backspace, Tab, etc.)
 - **Enhanced sort UI** — improve sorting controls to display active sort mode as prominently as modifier filters
 - **Persist filter & sort state** — remember last filtering and sorting preferences via configurable settings (never remember, per-session, 5-minute timeout, or always remember)
-- **Quick hotkey editor** — jump directly to the hotkey editor from any cheatsheet entry and auto-filter by selected hotkey
-- **Add links to the plugin** — include helpful links in the UI and documentation
 - **Compact/comfortable density toggle** — switch between a denser layout (smaller row height, tighter columns) and the current spacing, for users with many commands or small windows - setting should be configurable in the plugin settings
-- **Keyboard-only navigation within the modal** — arrow/Tab navigation between entries with a visible focus ring, without touching the mouse; pairs with the planned quick hotkey editor for an Enter-to-jump flow
+- **Keyboard-only navigation within the modal** — arrow/Tab navigation between entries with a visible focus ring, without touching the mouse; pairs with the quick hotkey editor for an Enter-to-jump flow
 - **Expand localization** — add support for additional languages, including right-to-left (RTL) text and Asian character sets

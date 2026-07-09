@@ -5,6 +5,7 @@ import { CheatsheetState } from "./state";
 import { Toolbar } from "./toolbar";
 import { GridRenderer } from "./grid";
 import { exportNoteToVault, saveHtmlDownload } from "./export";
+import { jumpToHotkey } from "./jumpToHotkey";
 
 export class CheatsheetModal extends Modal {
   private settings: HotkeysCheatsheetSettings;
@@ -59,6 +60,7 @@ export class CheatsheetModal extends Modal {
     const gridEl = contentEl.createDiv({ cls: "hkc-grid" });
     this.gridRenderer = new GridRenderer(gridEl, this.state, this.settings, {
       onRendered: () => this.toolbar.updateCollapseToggle(),
+      onJumpToHotkey: (name) => jumpToHotkey(this.app, name),
     });
     this.gridRenderer.render();
 

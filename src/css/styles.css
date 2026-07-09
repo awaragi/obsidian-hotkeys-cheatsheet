@@ -420,6 +420,15 @@
   font-style: italic;
 }
 
+/* Jump-to-native-hotkey-editor affordance */
+.hkc-entry-name--clickable {
+  cursor: pointer;
+}
+
+.hkc-entry-name--clickable:hover {
+  color: var(--text-accent);
+}
+
 /* ── Usage Indicators ────────────────────────────────────────────────────── */
 
 .hkc-usage {
