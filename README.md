@@ -225,8 +225,7 @@ To add a new language:
 Planned features and improvements for future releases:
 
 - **Special character filter** — add filter input to quickly find and display special keys (arrows, Enter, Backspace, Tab, etc.)
-- **Enhanced sort UI** — improve sorting controls to display active sort mode as prominently as modifier filters
-- **Persist filter & sort state** — remember last filtering and sorting preferences via configurable settings (never remember, per-session, 5-minute timeout, or always remember)
+- **Persist filter & sort state** — remember last filtering and sorting preferences via configurable settings: never remember (default), per-session, 5-minute timeout, or always remember.
 - **Compact/comfortable density toggle** — switch between a denser layout (smaller row height, tighter columns) and the current spacing, for users with many commands or small windows - setting should be configurable in the plugin settings
 - **Keyboard-only navigation within the modal** — arrow/Tab navigation between entries with a visible focus ring, without touching the mouse; pairs with the quick hotkey editor for an Enter-to-jump flow
 - **Expand localization** — add support for additional languages, including right-to-left (RTL) text and Asian character sets
