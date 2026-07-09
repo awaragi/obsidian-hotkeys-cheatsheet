@@ -415,3 +415,41 @@ The "Save as HTML" item in the export dropdown SHALL be active and clickable. Cl
 #### Scenario: Clicking Save as HTML triggers export
 - **WHEN** the user clicks "Save as HTML"
 - **THEN** the dropdown closes and the HTML export and download process begins
+
+---
+
+### Requirement: Filter dropdown includes conflict and modified checkboxes
+The modal's existing filter dropdown SHALL include two additional checkboxes, "Conflicts only" and "Modified only", alongside the four modifier checkboxes. When "Conflicts only" is checked, only entries flagged as conflicting (per the `hotkey-conflict-detection` capability) SHALL be shown. When "Modified only" is checked, only entries flagged as differing from default (per the `hotkey-collector` capability) SHALL be shown. Both checkboxes SHALL combine with each other, with the modifier checkboxes, and with the search input using AND logic — an entry must satisfy every currently-active condition to remain visible.
+
+#### Scenario: Conflicts only checkbox narrows the grid
+- **WHEN** the user checks "Conflicts only"
+- **THEN** only entries flagged as conflicting remain visible, across all sort modes
+
+#### Scenario: Modified only checkbox narrows the grid
+- **WHEN** the user checks "Modified only"
+- **THEN** only entries flagged as differing from default remain visible, across all sort modes
+
+#### Scenario: Conflicts and Modified combine with AND logic
+- **WHEN** the user checks both "Conflicts only" and "Modified only"
+- **THEN** only entries that are both conflicting AND differing from default remain visible
+
+#### Scenario: New checkboxes combine with modifier filter and search
+- **WHEN** the user checks "Conflicts only" and also checks a modifier checkbox or types a search query
+- **THEN** only entries satisfying all active conditions simultaneously remain visible
+
+#### Scenario: Unchecking both new checkboxes restores prior filtering
+- **WHEN** "Conflicts only" and "Modified only" are both unchecked
+- **THEN** visibility is governed only by the modifier filter and search, as before this change
+
+---
+
+### Requirement: Hotkey entry names jump to the native hotkey editor
+Each rendered hotkey entry's command name SHALL be a click target that hands off to the `hotkey-editor-handoff` capability, passing that entry's display name. The name SHALL show a pointer cursor and a hover style to indicate it is interactive. Orphan rows (unassigned key combinations with no bound command, shown in **By Most-Used Shortcut**) SHALL NOT be clickable, since there is no command to jump to.
+
+#### Scenario: Clicking a real entry's name opens the native hotkey editor
+- **WHEN** the user clicks the command name of a non-orphan hotkey entry
+- **THEN** Obsidian's Settings modal opens to the Hotkeys tab, filtered toward that command
+
+#### Scenario: Orphan rows are not clickable
+- **WHEN** the modal is sorted **By Most-Used Shortcut** and an orphan ("No command") row is displayed
+- **THEN** clicking its name does not trigger the hotkey-editor handoff

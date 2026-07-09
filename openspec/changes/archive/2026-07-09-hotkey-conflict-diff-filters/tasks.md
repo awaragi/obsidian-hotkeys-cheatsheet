@@ -11,7 +11,7 @@
 - [x] 2.3 Add a "Conflicts only" checkbox to the filter dropdown in `toolbar.ts`, wired with the same change-event → state setter → `callbacks.onChange()` pattern as the modifier checkboxes.
 - [x] 2.4 Extend the filter button's active-state class (`hkc-filter-btn--active`) to also apply when `conflictsOnly` is checked, even with no modifier chips shown — resolves the open question in `design.md` without introducing a new chip type.
 - [x] 2.5 Add a `modal.filter_conflicts_only` string to `en.json`, `fr.json`, and `es.json`.
-- [ ] 2.6 Manually verify in a dev vault: assign the same hotkey to two different commands via Obsidian's own hotkey settings, open the cheatsheet, check "Conflicts only", and confirm both commands appear and nothing else does.
+- [x] 2.6 Manually verify in a dev vault: assign the same hotkey to two different commands via Obsidian's own hotkey settings, open the cheatsheet, check "Conflicts only", and confirm both commands appear and nothing else does.
 
 ## 3. Diff-from-default detection — data layer
 
@@ -26,7 +26,7 @@
 - [x] 4.3 Add a "Modified only" checkbox to the filter dropdown in `toolbar.ts`, using the same wiring pattern as "Conflicts only".
 - [x] 4.4 Extend the filter button's active-state class to also apply when `modifiedOnly` is checked.
 - [x] 4.5 Add a `modal.filter_modified_only` string to `en.json`, `fr.json`, and `es.json`.
-- [ ] 4.6 Manually verify in a dev vault: change a default hotkey via Obsidian's settings, open the cheatsheet, check "Modified only", and confirm only that entry (and any other previously-customised ones) remain visible.
+- [x] 4.6 Manually verify in a dev vault: change a default hotkey via Obsidian's settings, open the cheatsheet, check "Modified only", and confirm only that entry (and any other previously-customised ones) remain visible.
 
 ## 5. Cross-cutting verification
 

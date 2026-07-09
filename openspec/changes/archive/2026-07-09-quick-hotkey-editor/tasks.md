@@ -12,7 +12,7 @@
 ## 3. Verify
 
 - [x] 3.1 Run `npm run lint`, `npm test`, and `npm run build`; fix any failures.
-- [ ] 3.2 Manually verify in the dev vault (`npm run dev:deploy`): clicking a normal entry's name opens Settings on the Hotkeys tab filtered to that command; clicking an orphan row (in **By Most-Used Shortcut** sort) does nothing; hover affordance is visible. (Deployed and ready — needs a live re-check since `jumpToHotkey` was refactored after the original manual pass.)
+- [x] 3.2 Manually verify in the dev vault (`npm run dev:deploy`): clicking a normal entry's name opens Settings on the Hotkeys tab filtered to that command; clicking an orphan row (in **By Most-Used Shortcut** sort) does nothing; hover affordance is visible.
 
 ## 4. Documentation
 
