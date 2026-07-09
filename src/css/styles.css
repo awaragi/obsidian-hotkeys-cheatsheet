@@ -93,15 +93,17 @@
 .hkc-filter-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  min-width: 90px;
+  min-width: 28px;
+  height: 28px;
   background: var(--background-modifier-form-field);
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--radius-s);
   color: var(--text-muted);
   cursor: pointer;
   font-size: var(--font-ui-small);
-  padding: 6px 12px;
+  padding: 4px;
   white-space: nowrap;
   transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
@@ -179,7 +181,7 @@
   cursor: pointer;
 }
 
-.hkc-filter-divider {
+.hkc-dropdown-divider {
   height: 1px;
   margin: 6px 0;
   background: var(--background-modifier-border);
@@ -194,14 +196,17 @@
 .hkc-sort-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
+  min-width: 28px;
+  height: 28px;
   background: var(--background-modifier-form-field);
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--radius-s);
   color: var(--text-muted);
   cursor: pointer;
   font-size: var(--font-ui-small);
-  padding: 6px 12px;
+  padding: 4px;
   white-space: nowrap;
   transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
@@ -209,6 +214,11 @@
 .hkc-sort-btn:hover {
   color: var(--text-normal);
   background: var(--background-modifier-hover);
+}
+
+.hkc-sort-btn--active {
+  border-color: var(--interactive-accent);
+  color: var(--text-normal);
 }
 
 .hkc-sort-dropdown {
@@ -228,29 +238,14 @@
   display: none;
 }
 
-.hkc-sort-item {
-  padding: 5px 14px;
-  cursor: pointer;
-  font-size: var(--font-ui-small);
-  color: var(--text-normal);
-  user-select: none;
-  transition: background 0.1s;
-}
-
-.hkc-sort-item:hover {
-  background: var(--background-modifier-hover);
-}
-
-.hkc-sort-item--active {
-  color: var(--interactive-accent);
-  font-weight: 600;
-}
-
-.hkc-sort-item--disabled {
+.hkc-filter-item--disabled {
   color: var(--text-faint);
   cursor: not-allowed;
-  pointer-events: none;
   opacity: 0.5;
+}
+
+.hkc-filter-item--disabled input[type="checkbox"] {
+  cursor: not-allowed;
 }
 
 /* ── Export Dropdown ─────────────────────────────────────────────────────── */

@@ -11,6 +11,26 @@ export interface ToolbarCallbacks {
   onExportHtml(): void;
 }
 
+type SortLabelKey =
+  | "modal.sort_modifier"
+  | "modal.sort_key"
+  | "modal.sort_most_used_category"
+  | "modal.sort_most_used_shortcut";
+
+type SortChipKey =
+  | "modal.sort_chip_modifier"
+  | "modal.sort_chip_key"
+  | "modal.sort_chip_most_used_category"
+  | "modal.sort_chip_most_used_shortcut";
+
+/** Short chip label for a non-default sort mode — "By Category" (the default) has no chip, mirroring the filter button's "no active filters" state. */
+const SORT_CHIP_KEYS: Partial<Record<SortMode, SortChipKey>> = {
+  modifier: "modal.sort_chip_modifier",
+  key: "modal.sort_chip_key",
+  "most-used-category": "modal.sort_chip_most_used_category",
+  "most-used-shortcut": "modal.sort_chip_most_used_shortcut",
+};
+
 /**
  * Builds and owns the modal's toolbar: export dropdown, search box, modifier
  * filter, sort dropdown, and the collapse/expand-all toggle. Holds the
@@ -26,7 +46,7 @@ export class Toolbar {
   private exportOpen = false;
   private sortBtn!: HTMLButtonElement;
   private sortDropdown!: HTMLElement;
-  private sortItems: HTMLElement[] = [];
+  private sortCheckboxes: HTMLInputElement[] = [];
   private sortOpen = false;
   private collapseToggleBtn!: HTMLButtonElement;
 
@@ -50,6 +70,22 @@ export class Toolbar {
     private readonly state: CheatsheetState,
     private readonly callbacks: ToolbarCallbacks
   ) {}
+
+  /**
+   * Closes every dropdown. Each toggle button's own click handler stops
+   * propagation (so a click inside the dropdown doesn't immediately trigger
+   * `handleOutsideClick` and close it right back), which also means that
+   * handler never runs for clicks on a *different* toggle button — so each
+   * button must close its siblings itself before opening its own dropdown.
+   */
+  private closeDropdowns(): void {
+    this.filterOpen = false;
+    this.filterDropdown.addClass("hkc-hidden");
+    this.exportOpen = false;
+    this.exportDropdown.addClass("hkc-hidden");
+    this.sortOpen = false;
+    this.sortDropdown.addClass("hkc-hidden");
+  }
 
   attach(doc: Document): void {
     doc.addEventListener("click", this.handleOutsideClick);
@@ -101,7 +137,9 @@ export class Toolbar {
 
     exportBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      this.exportOpen = !this.exportOpen;
+      const opening = !this.exportOpen;
+      this.closeDropdowns();
+      this.exportOpen = opening;
       this.exportDropdown.toggleClass("hkc-hidden", !this.exportOpen);
       if (this.exportOpen) this.searchInput.focus();
     });
@@ -140,10 +178,7 @@ export class Toolbar {
 
     // Modifier filter
     const filterWrapper = toolbar.createDiv({ cls: "hkc-filter-wrapper" });
-    this.filterBtn = filterWrapper.createEl("button", {
-      text: t("modal.filter_label"),
-      cls: "hkc-filter-btn",
-    });
+    this.filterBtn = filterWrapper.createEl("button", { cls: "hkc-filter-btn" });
     this.filterDropdown = filterWrapper.createDiv({
       cls: "hkc-filter-dropdown hkc-hidden",
     });
@@ -163,7 +198,7 @@ export class Toolbar {
       });
     }
 
-    this.filterDropdown.createDiv({ cls: "hkc-filter-divider" });
+    this.filterDropdown.createDiv({ cls: "hkc-dropdown-divider" });
 
     const conflictsLabel = this.filterDropdown.createEl("label", {
       cls: "hkc-filter-item",
@@ -189,11 +224,14 @@ export class Toolbar {
 
     this.filterBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      this.filterOpen = !this.filterOpen;
+      const opening = !this.filterOpen;
+      this.closeDropdowns();
+      this.filterOpen = opening;
       this.filterDropdown.toggleClass("hkc-hidden", !this.filterOpen);
     });
 
     this.filterDropdown.addEventListener("click", (e) => e.stopPropagation());
+    this.updateFilterBtn();
 
     // Sort control
     this.buildSortControl(toolbar);
@@ -213,68 +251,99 @@ export class Toolbar {
 
   private buildSortControl(toolbar: HTMLElement) {
     const sortWrapper = toolbar.createDiv({ cls: "hkc-sort-wrapper" });
-    this.sortBtn = sortWrapper.createEl("button", {
-      text: t("modal.sort_label"),
-      cls: "hkc-sort-btn",
-    });
+    this.sortBtn = sortWrapper.createEl("button", { cls: "hkc-sort-btn" });
     this.sortDropdown = sortWrapper.createDiv({
       cls: "hkc-sort-dropdown hkc-hidden",
     });
 
-    type SortLabelKey =
-      | "modal.sort_category"
-      | "modal.sort_modifier"
-      | "modal.sort_key"
-      | "modal.sort_most_used_category"
-      | "modal.sort_most_used_shortcut";
-
-    const modes: { mode: SortMode; labelKey: SortLabelKey }[] = [
-      { mode: "category", labelKey: "modal.sort_category" },
+    const regularModes: { mode: SortMode; labelKey: SortLabelKey }[] = [
       { mode: "modifier", labelKey: "modal.sort_modifier" },
       { mode: "key", labelKey: "modal.sort_key" },
+    ];
+
+    const usageModes: { mode: SortMode; labelKey: SortLabelKey }[] = [
       { mode: "most-used-category", labelKey: "modal.sort_most_used_category" },
       { mode: "most-used-shortcut", labelKey: "modal.sort_most_used_shortcut" },
     ];
 
-    const usageDependentModes: SortMode[] = ["most-used-category", "most-used-shortcut"];
+    this.sortCheckboxes = [];
+    for (const { mode, labelKey } of regularModes) {
+      this.buildSortItem(mode, labelKey, false);
+    }
 
-    this.sortItems = [];
-    for (const { mode, labelKey } of modes) {
-      const item = this.sortDropdown.createDiv({ cls: "hkc-sort-item" });
-      item.setText(t(labelKey));
-      item.dataset.mode = mode;
+    this.sortDropdown.createDiv({ cls: "hkc-dropdown-divider" });
 
-      const usageDependent = usageDependentModes.includes(mode);
-      if (usageDependent && !this.settings.trackShortcutUsage) {
-        item.addClass("hkc-sort-item--disabled");
-        item.setAttribute("aria-label", t("modal.sort_disabled_hint"));
-      } else {
-        item.addEventListener("click", () => {
-          this.state.setSortMode(mode);
-          this.sortOpen = false;
-          this.sortDropdown.addClass("hkc-hidden");
-          this.updateSortItems();
-          this.updateToolbarState();
-          this.callbacks.onChange();
-        });
-      }
-      this.sortItems.push(item);
+    for (const { mode, labelKey } of usageModes) {
+      this.buildSortItem(mode, labelKey, true);
     }
 
     this.sortBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      this.sortOpen = !this.sortOpen;
+      const opening = !this.sortOpen;
+      this.closeDropdowns();
+      this.sortOpen = opening;
       this.sortDropdown.toggleClass("hkc-hidden", !this.sortOpen);
     });
 
     this.sortDropdown.addEventListener("click", (e) => e.stopPropagation());
-    this.updateSortItems();
+    this.updateSortCheckboxes();
+    this.updateSortBtn();
   }
 
-  private updateSortItems() {
-    for (const item of this.sortItems) {
-      item.toggleClass("hkc-sort-item--active", item.dataset.mode === this.state.sortMode);
+  /**
+   * Sort modes are mutually exclusive but — unlike modifiers/conflicts/modified —
+   * never "off": exactly one is always in effect. "By Category" is the default
+   * and has no checkbox of its own; it's the implicit state when every checkbox
+   * here is unchecked (checking one unchecks the rest; unchecking the active
+   * one reverts to it), mirroring the modifier filter's own checkbox pattern.
+   */
+  private buildSortItem(mode: SortMode, labelKey: SortLabelKey, usageDependent: boolean) {
+    const disabled = usageDependent && !this.settings.trackShortcutUsage;
+
+    const label = this.sortDropdown.createEl("label", {
+      cls: disabled ? "hkc-filter-item hkc-filter-item--disabled" : "hkc-filter-item",
+    });
+    const checkbox = label.createEl("input", { type: "checkbox" });
+    checkbox.dataset.mode = mode;
+    checkbox.disabled = disabled;
+    label.appendText(" " + t(labelKey));
+
+    if (disabled) {
+      label.setAttribute("aria-label", t("modal.sort_disabled_hint"));
+    } else {
+      checkbox.addEventListener("change", () => {
+        this.state.setSortMode(checkbox.checked ? mode : "category");
+        this.updateSortCheckboxes();
+        this.updateToolbarState();
+        this.updateSortBtn();
+        this.callbacks.onChange();
+      });
     }
+    this.sortCheckboxes.push(checkbox);
+  }
+
+  private updateSortCheckboxes() {
+    for (const checkbox of this.sortCheckboxes) {
+      checkbox.checked = checkbox.dataset.mode === this.state.sortMode;
+    }
+  }
+
+  /** Mirrors `updateFilterBtn`: icon always shown; "By Category" (the default) has no chip, any other mode shows one. */
+  private updateSortBtn() {
+    const btn = this.sortBtn;
+    const chipKey = SORT_CHIP_KEYS[this.state.sortMode];
+
+    btn.empty();
+    setIcon(btn, "arrow-up-down");
+    btn.setAttribute("aria-label", t("modal.sort_label"));
+
+    if (!chipKey) {
+      btn.removeClass("hkc-sort-btn--active");
+      return;
+    }
+
+    btn.createSpan({ text: t(chipKey), cls: "hkc-filter-chip hkc-filter-chip--tag" });
+    btn.addClass("hkc-sort-btn--active");
   }
 
   private updateToolbarState() {
@@ -299,11 +368,13 @@ export class Toolbar {
   private updateFilterBtn() {
     const btn = this.filterBtn;
     btn.empty();
+    setIcon(btn, "filter");
+    btn.setAttribute("aria-label", t("modal.filter_label"));
+
     const hasModifierChips = this.state.activeModifiers.size > 0;
     const hasOtherActiveFilter = this.state.conflictsOnly || this.state.modifiedOnly;
 
     if (!hasModifierChips && !hasOtherActiveFilter) {
-      btn.setText(t("modal.filter_label"));
       btn.removeClass("hkc-filter-btn--active");
       return;
     }
@@ -319,7 +390,6 @@ export class Toolbar {
     if (this.state.modifiedOnly) {
       btn.createSpan({ text: t("modal.filter_modified_chip"), cls: "hkc-filter-chip hkc-filter-chip--tag" });
     }
-    btn.createSpan({ text: " ▾" });
     btn.addClass("hkc-filter-btn--active");
   }
 }
