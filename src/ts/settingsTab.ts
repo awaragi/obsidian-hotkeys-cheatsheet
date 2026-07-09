@@ -57,10 +57,10 @@ export class HotkeysCheatsheetSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName(t("settings.usage_tracking.reset_label"))
       .setDesc(t("settings.usage_tracking.reset_desc"))
-      .addButton((button) =>
+      .addButton((button) => {
+        button.buttonEl.addClass("mod-warning");
         button
           .setButtonText(t("settings.usage_tracking.reset_label"))
-          .setDestructive()
           .onClick(async () => {
             if (!this.resetPending) {
               this.resetPending = true;
@@ -73,8 +73,8 @@ export class HotkeysCheatsheetSettingTab extends PluginSettingTab {
             this.resetPending = false;
             await resetUsageData();
             new Notice(t("settings.usage_tracking.reset_success"));
-          })
-      );
+          });
+      });
 
     const about = containerEl.createDiv({ cls: "hkc-about" });
 
