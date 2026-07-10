@@ -8,6 +8,8 @@
   "modal.filter_modified_only": "Solo modificados",
   "modal.filter_conflicts_chip": "Conflictos",
   "modal.filter_modified_chip": "Modificados",
+  "modal.filter_special_keys_only": "Solo teclas especiales",
+  "modal.filter_special_keys_chip": "Teclas especiales",
   "modal.expand_all": "Expandir todo",
   "modal.collapse_all": "Contraer todo",
   "modal.no_results": "Sin resultados",

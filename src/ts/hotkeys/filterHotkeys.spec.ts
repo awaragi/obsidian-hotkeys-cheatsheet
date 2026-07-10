@@ -1,4 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+vi.mock("obsidian", () => ({
+  Platform: { isMacOS: false },
+}));
+
 import { matchesFilters, matchesFlatItem } from "./filterHotkeys";
 import type { HotkeyEntry } from "../types";
 import type { FlatHotkeyItem } from "./sortHotkeys";
@@ -148,6 +153,57 @@ describe("matchesFilters conflicts/modified flags", () => {
   });
 });
 
+describe("matchesFilters specialKeysOnly flag", () => {
+  it("returns true for an entry bound to a special key when specialKeysOnly is active", () => {
+    const entry = makeEntry("Move Down", [{ modifiers: [], key: "ARROWDOWN" }]);
+    expect(matchesFilters(entry, "", new Set(), { specialKeysOnly: true })).toBe(true);
+  });
+
+  it("returns false for an entry with no special-key binding when specialKeysOnly is active", () => {
+    const entry = makeEntry("Toggle Bold", [{ modifiers: ["Mod"], key: "B" }]);
+    expect(matchesFilters(entry, "", new Set(), { specialKeysOnly: true })).toBe(false);
+  });
+
+  it("matches when at least one of several bindings is a special key", () => {
+    const entry = makeEntry("Dual Bind", [
+      { modifiers: ["Mod"], key: "B" },
+      { modifiers: [], key: "TAB" },
+    ]);
+    expect(matchesFilters(entry, "", new Set(), { specialKeysOnly: true })).toBe(true);
+  });
+
+  it("AND-combines with conflictsOnly and modifiedOnly", () => {
+    const entry = makeEntry("Move Down", [{ modifiers: [], key: "ARROWDOWN" }], true);
+    expect(
+      matchesFilters(entry, "", new Set(), {
+        specialKeysOnly: true,
+        conflictsOnly: true,
+        modifiedOnly: true,
+        conflictingIds: new Set(["test:cmd"]),
+      })
+    ).toBe(true);
+    expect(
+      matchesFilters(entry, "", new Set(), {
+        specialKeysOnly: true,
+        conflictsOnly: true,
+        conflictingIds: new Set(["other:cmd"]),
+      })
+    ).toBe(false);
+  });
+
+  it("combines with an active modifier filter", () => {
+    const entry = makeEntry("Move Down", [{ modifiers: ["Mod"], key: "ARROWDOWN" }]);
+    expect(matchesFilters(entry, "", new Set(["Mod"]), { specialKeysOnly: true })).toBe(true);
+    expect(matchesFilters(entry, "", new Set(["Shift"]), { specialKeysOnly: true })).toBe(false);
+  });
+
+  it("combines with an active search query", () => {
+    const entry = makeEntry("Move Down", [{ modifiers: [], key: "ARROWDOWN" }]);
+    expect(matchesFilters(entry, "move", new Set(), { specialKeysOnly: true })).toBe(true);
+    expect(matchesFilters(entry, "italic", new Set(), { specialKeysOnly: true })).toBe(false);
+  });
+});
+
 describe("matchesFlatItem", () => {
   it("matches a bound item like matchesFilters would", () => {
     const item = makeFlatItem({});
@@ -205,5 +261,29 @@ describe("matchesFlatItem", () => {
       })
     ).toBe(false);
     expect(matchesFlatItem(orphan, "", new Set(), { modifiedOnly: true })).toBe(false);
+  });
+
+  it("returns true for an item bound to a special key when specialKeysOnly is active", () => {
+    const item = makeFlatItem({ hotkeys: [{ modifiers: [], key: "TAB" }] });
+    expect(matchesFlatItem(item, "", new Set(), { specialKeysOnly: true })).toBe(true);
+  });
+
+  it("returns false for an item with no special-key binding when specialKeysOnly is active", () => {
+    const item = makeFlatItem({});
+    expect(matchesFlatItem(item, "", new Set(), { specialKeysOnly: true })).toBe(false);
+  });
+
+  it("keeps an orphan visible under specialKeysOnly when its key is a special key", () => {
+    const orphan = makeFlatItem({
+      isOrphan: true,
+      name: "",
+      hotkeys: [{ modifiers: ["Shift"], key: "TAB" }],
+    });
+    expect(matchesFlatItem(orphan, "", new Set(), { specialKeysOnly: true })).toBe(true);
+  });
+
+  it("excludes an orphan under specialKeysOnly when its key is not a special key", () => {
+    const orphan = makeFlatItem({ isOrphan: true, name: "" });
+    expect(matchesFlatItem(orphan, "", new Set(), { specialKeysOnly: true })).toBe(false);
   });
 });

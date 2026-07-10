@@ -70,6 +70,11 @@ export function keyIcon(key: string): string {
   return KEY_ICONS[key] ?? key;
 }
 
+/** True if `key` (already-uppercased) is one of the special/non-printable keys in `KEY_ICONS`. */
+export function isSpecialKey(key: string): boolean {
+  return key in KEY_ICONS;
+}
+
 /** Special/non-printable keys sort before ordinary character keys, in this order; used by `compareKeys`. */
 const SPECIAL_KEY_ORDER = Object.keys(KEY_ICONS);
 

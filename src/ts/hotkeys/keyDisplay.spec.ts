@@ -6,7 +6,7 @@ vi.mock("obsidian", () => ({
   },
 }));
 
-import { modLabel, filterLabel, keyIcon, compareKeys } from "./keyDisplay";
+import { modLabel, filterLabel, keyIcon, compareKeys, isSpecialKey } from "./keyDisplay";
 import { Platform } from "obsidian";
 
 const platform = Platform as { isMacOS: boolean };
@@ -77,6 +77,21 @@ describe("keyIcon", () => {
 
   it("passes through an unknown key unchanged", () => {
     expect(keyIcon("F5")).toBe("F5");
+  });
+});
+
+describe("isSpecialKey", () => {
+  it("returns true for a known special key", () => {
+    expect(isSpecialKey("ARROWUP")).toBe(true);
+    expect(isSpecialKey("ENTER")).toBe(true);
+  });
+
+  it("returns false for an ordinary character key", () => {
+    expect(isSpecialKey("B")).toBe(false);
+  });
+
+  it("is case-sensitive — expects the already-uppercased form", () => {
+    expect(isSpecialKey("enter")).toBe(false);
   });
 });
 

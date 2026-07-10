@@ -33,6 +33,7 @@ export class CheatsheetState {
   activeModifiers: Set<string> = new Set();
   conflictsOnly = false;
   modifiedOnly = false;
+  specialKeysOnly = false;
   sortMode: SortMode = "category";
   collapsedSections = new Set<string>();
   currentGroupLabels: string[] = [];
@@ -94,6 +95,10 @@ export class CheatsheetState {
 
   setModifiedOnly(active: boolean): void {
     this.modifiedOnly = active;
+  }
+
+  setSpecialKeysOnly(active: boolean): void {
+    this.specialKeysOnly = active;
   }
 
   setSortMode(mode: SortMode): void {

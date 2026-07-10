@@ -8,6 +8,8 @@
   "modal.filter_modified_only": "Modifiés uniquement",
   "modal.filter_conflicts_chip": "Conflits",
   "modal.filter_modified_chip": "Modifiés",
+  "modal.filter_special_keys_only": "Touches spéciales uniquement",
+  "modal.filter_special_keys_chip": "Touches spéciales",
   "modal.expand_all": "Tout développer",
   "modal.collapse_all": "Tout réduire",
   "modal.no_results": "Aucun résultat",

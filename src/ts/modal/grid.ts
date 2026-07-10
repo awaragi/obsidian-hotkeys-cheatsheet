@@ -53,6 +53,7 @@ export class GridRenderer {
         matchesFlatItem(item, query, this.state.activeModifiers, {
           conflictsOnly: this.state.conflictsOnly,
           modifiedOnly: this.state.modifiedOnly,
+          specialKeysOnly: this.state.specialKeysOnly,
           conflictingIds: this.state.conflictingIds,
         })
       );
@@ -76,6 +77,7 @@ export class GridRenderer {
           matchesFilters(entry, query, this.state.activeModifiers, {
             conflictsOnly: this.state.conflictsOnly,
             modifiedOnly: this.state.modifiedOnly,
+            specialKeysOnly: this.state.specialKeysOnly,
             conflictingIds: this.state.conflictingIds,
           })
         );

@@ -141,7 +141,6 @@ export class Toolbar {
       this.closeDropdowns();
       this.exportOpen = opening;
       this.exportDropdown.toggleClass("hkc-hidden", !this.exportOpen);
-      if (this.exportOpen) this.searchInput.focus();
     });
 
     this.exportDropdown.addEventListener("click", (e) => e.stopPropagation());
@@ -197,6 +196,19 @@ export class Toolbar {
         this.callbacks.onChange();
       });
     }
+
+    this.filterDropdown.createDiv({ cls: "hkc-dropdown-divider" });
+
+    const specialKeysLabel = this.filterDropdown.createEl("label", {
+      cls: "hkc-filter-item",
+    });
+    const specialKeysCheckbox = specialKeysLabel.createEl("input", { type: "checkbox" });
+    specialKeysLabel.appendText(" " + t("modal.filter_special_keys_only"));
+    specialKeysCheckbox.addEventListener("change", () => {
+      this.state.setSpecialKeysOnly(specialKeysCheckbox.checked);
+      this.updateFilterBtn();
+      this.callbacks.onChange();
+    });
 
     this.filterDropdown.createDiv({ cls: "hkc-dropdown-divider" });
 
@@ -372,7 +384,8 @@ export class Toolbar {
     btn.setAttribute("aria-label", t("modal.filter_label"));
 
     const hasModifierChips = this.state.activeModifiers.size > 0;
-    const hasOtherActiveFilter = this.state.conflictsOnly || this.state.modifiedOnly;
+    const hasOtherActiveFilter =
+      this.state.conflictsOnly || this.state.modifiedOnly || this.state.specialKeysOnly;
 
     if (!hasModifierChips && !hasOtherActiveFilter) {
       btn.removeClass("hkc-filter-btn--active");
@@ -383,6 +396,9 @@ export class Toolbar {
       if (this.state.activeModifiers.has(mod)) {
         btn.createEl("kbd", { text: filterLabel(mod), cls: "hkc-filter-chip" });
       }
+    }
+    if (this.state.specialKeysOnly) {
+      btn.createSpan({ text: t("modal.filter_special_keys_chip"), cls: "hkc-filter-chip hkc-filter-chip--tag" });
     }
     if (this.state.conflictsOnly) {
       btn.createSpan({ text: t("modal.filter_conflicts_chip"), cls: "hkc-filter-chip hkc-filter-chip--tag" });

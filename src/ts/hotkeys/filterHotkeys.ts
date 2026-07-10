@@ -1,5 +1,6 @@
 import type { HotkeyBinding, HotkeyEntry } from "../types";
 import type { FlatHotkeyItem } from "./sortHotkeys";
+import { isSpecialKey } from "./keyDisplay";
 
 /** True if at least one hotkey contains ALL active modifiers (AND logic). */
 export function hotkeysMatchModifiers(
@@ -18,6 +19,7 @@ const EMPTY_IDS: Set<string> = new Set();
 export interface EntryFilterFlags {
   conflictsOnly?: boolean;
   modifiedOnly?: boolean;
+  specialKeysOnly?: boolean;
   conflictingIds?: Set<string>;
 }
 
@@ -31,6 +33,8 @@ export interface EntryFilterFlags {
  * - Conflicts only: entry's id (or `commandId`, for per-binding composite
  *   rows produced by `groupByModifier`) must be in `conflictingIds`.
  * - Modified only: `entry.isModifiedFromDefault` must be true.
+ * - Special keys only: at least one hotkey's key must be a special key
+ *   (per `isSpecialKey`).
  * - Text query: entry name must contain the query as a substring (case-
  *   insensitive) OR at least one hotkey key must exactly equal the query
  *   (case-insensitive).
@@ -43,9 +47,15 @@ export function matchesFilters(
 ): boolean {
   if (!hotkeysMatchModifiers(entry.hotkeys, activeModifiers)) return false;
 
-  const { conflictsOnly = false, modifiedOnly = false, conflictingIds = EMPTY_IDS } = flags;
+  const {
+    conflictsOnly = false,
+    modifiedOnly = false,
+    specialKeysOnly = false,
+    conflictingIds = EMPTY_IDS,
+  } = flags;
   if (conflictsOnly && !conflictingIds.has(entry.commandId ?? entry.id)) return false;
   if (modifiedOnly && !entry.isModifiedFromDefault) return false;
+  if (specialKeysOnly && !entry.hotkeys.some((hk) => isSpecialKey(hk.key))) return false;
 
   if (query) {
     const lowerQuery = query.toLowerCase();
@@ -74,9 +84,15 @@ export function matchesFlatItem(
 ): boolean {
   if (!hotkeysMatchModifiers(item.hotkeys, activeModifiers)) return false;
 
-  const { conflictsOnly = false, modifiedOnly = false, conflictingIds = EMPTY_IDS } = flags;
+  const {
+    conflictsOnly = false,
+    modifiedOnly = false,
+    specialKeysOnly = false,
+    conflictingIds = EMPTY_IDS,
+  } = flags;
   if (conflictsOnly && !conflictingIds.has(item.commandId)) return false;
   if (modifiedOnly && !item.isModifiedFromDefault) return false;
+  if (specialKeysOnly && !item.hotkeys.some((hk) => isSpecialKey(hk.key))) return false;
 
   if (item.isOrphan) return query === "";
 

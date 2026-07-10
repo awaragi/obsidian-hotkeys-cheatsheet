@@ -18,6 +18,7 @@ Obsidian's built-in hotkey settings show a flat alphabetical list of 250+ comman
 - **Search clear button** — `×` button inside the search field clears the query instantly
 - **Filter menu** — narrow the list to hotkeys with specific modifiers (select Cmd + Shift to find all `Cmd Shift` combos); combine as many as you like, together with search
 - **Conflict & modified-from-default filters** — "Conflicts only" shows commands whose binding collides with another command's (Obsidian silently allows this — only one wins at runtime); "Modified only" shows commands whose binding differs from Obsidian's shipped default
+- **Special keys filter** — "Special keys only" narrows the list to commands bound to a non-alphanumeric key (arrows, Enter, Backspace, Delete, Tab, Home, End, PageUp/Down, Escape)
 - **Active filters at a glance** — everything you've selected shows right on the filter button, so you always know what's currently narrowing the view
 - **Sort menu** — reorder the cheatsheet **By Category** (default), **By Modifier**, **By Key**, **By Most-Used Category**, or **By Most-Used Shortcut**; the last two need [usage tracking](#shortcut-usage-tracking-opt-in-fully-local) turned on
 - **Usage indicators** *(opt-in)* — small bar-glyph + count badges next to each shortcut and category heading, showing how often it's actually been pressed — see [Shortcut usage tracking](#shortcut-usage-tracking-opt-in-fully-local)
@@ -224,7 +225,6 @@ To add a new language:
 
 Planned features and improvements for future releases:
 
-- **Special character filter** — add filter input to quickly find and display special keys (arrows, Enter, Backspace, Tab, etc.)
 - **Persist filter & sort state** — remember last filtering and sorting preferences via configurable settings: never remember (default), per-session, 5-minute timeout, or always remember.
 - **Compact/comfortable density toggle** — switch between a denser layout (smaller row height, tighter columns) and the current spacing, for users with many commands or small windows - setting should be configurable in the plugin settings
 - **Keyboard-only navigation within the modal** — arrow/Tab navigation between entries with a visible focus ring, without touching the mouse; pairs with the quick hotkey editor for an Enter-to-jump flow
