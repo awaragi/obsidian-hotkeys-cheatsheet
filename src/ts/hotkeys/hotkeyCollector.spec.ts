@@ -145,6 +145,43 @@ describe("buildHotkeyGroups", () => {
     const groups = buildHotkeyGroups({ "my-plugin:open": [{ modifiers: ["Mod"], key: "p" }] }, {}, cmds);
     expect(groups[0].entries[0].name).toBe("Open My Plugin");
   });
+
+  it("orders Japanese entry names within a category using ja collation when the active locale is ja", () => {
+    vi.stubGlobal("window", { moment: { locale: () => "ja" } });
+    try {
+      const cmds = {
+        "editor:i": { id: "editor:i", name: "い" },
+        "editor:a": { id: "editor:a", name: "あ" },
+      };
+      const defaultKeys = {
+        "editor:i": [{ modifiers: ["Mod"], key: "i" }],
+        "editor:a": [{ modifiers: ["Mod"], key: "a" }],
+      };
+      const groups = buildHotkeyGroups(defaultKeys, {}, cmds);
+      const editing = groups.find((g) => g.category === "Editing")!;
+      expect(editing.entries.map((e) => e.name)).toEqual(["あ", "い"]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("orders Japanese plugin category names using ja collation when the active locale is ja", () => {
+    vi.stubGlobal("window", { moment: { locale: () => "ja" } });
+    try {
+      const cmds = {
+        "い:action": { id: "い:action", name: "Action" },
+        "あ:action": { id: "あ:action", name: "Action" },
+      };
+      const defaultKeys = {
+        "い:action": [{ modifiers: ["Mod"], key: "i" }],
+        "あ:action": [{ modifiers: ["Mod"], key: "a" }],
+      };
+      const groups = buildHotkeyGroups(defaultKeys, {}, cmds);
+      expect(groups.map((g) => g.category)).toEqual(["あ", "い"]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });
 
 describe("buildHotkeyGroups isModifiedFromDefault", () => {

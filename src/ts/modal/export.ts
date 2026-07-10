@@ -1,12 +1,21 @@
 import { App, Notice, TFile } from "obsidian";
 import type { CategoryGroup } from "../types";
-import { t } from "../i18n/i18n";
+import { t, locale, isRtl } from "../i18n/i18n";
 import { modLabel, keyIcon } from "../hotkeys/keyDisplay";
+import { categoryDisplayLabel } from "../hotkeys/categories";
 import { fillTemplate, renderHtmlSections, escapeMarkdownTableCell } from "./htmlExportTemplate";
 import type { CheatsheetState } from "./state";
 
-const EXPORT_FILENAME = "Hotkeys Cheatsheet.md";
-const EXPORT_HTML_FILENAME = "Hotkeys Cheatsheet.html";
+/** Note filename, derived from the translated title so it matches the active locale. */
+export function exportNoteFilename(): string {
+  return `${t("modal.title")}.md`;
+}
+
+/** HTML export filename, derived from the translated title so it matches the active locale. */
+export function exportHtmlFilename(): string {
+  return `${t("modal.title")}.html`;
+}
+
 /** How long an "already exists" overwrite confirmation stays valid — matches the Notice's visible duration. */
 export const EXPORT_OVERWRITE_CONFIRM_MS = 5000;
 
@@ -21,8 +30,8 @@ export function generateMarkdown(groups: CategoryGroup[]): string {
     `*${t("modal.export_subtitle", { date: today })}*`,
   ];
   for (const group of groups) {
-    lines.push(``, `## ${group.category}`, ``);
-    lines.push(`| Command | Hotkey |`);
+    lines.push(``, `## ${categoryDisplayLabel(group.category)}`, ``);
+    lines.push(`| ${t("modal.export_table_command")} | ${t("modal.export_table_hotkey")} |`);
     lines.push(`|---------|--------|`);
     for (const entry of group.entries) {
       const hotkeyStr = entry.hotkeys
@@ -49,7 +58,8 @@ export async function exportNoteToVault(
   onSaved: (file: TFile) => void | Promise<void>
 ): Promise<void> {
   const folder = app.workspace.getActiveFile()?.parent?.path ?? "/";
-  const path = folder === "/" ? EXPORT_FILENAME : `${folder}/${EXPORT_FILENAME}`;
+  const filename = exportNoteFilename();
+  const path = folder === "/" ? filename : `${folder}/${filename}`;
   const existing = app.vault.getAbstractFileByPath(path);
 
   const confirmed = state.isOverwriteConfirmed(path);
@@ -72,7 +82,7 @@ export async function exportNoteToVault(
     state.clearPendingOverwrite();
     await onSaved(savedFile);
   } catch (err) {
-    new Notice(`Export failed: ${String(err)}`);
+    new Notice(t("modal.export_failed", { error: String(err) }));
   }
 }
 
@@ -80,7 +90,8 @@ export function generateHtml(groups: CategoryGroup[]): string {
   const title = t("modal.title");
   const date = new Date().toISOString().slice(0, 10);
   const content = renderHtmlSections(groups);
-  return fillTemplate(title, date, content);
+  const loc = locale();
+  return fillTemplate(title, date, content, loc, isRtl(loc) ? "rtl" : "ltr");
 }
 
 /** Triggers a browser download of `groups` rendered as a standalone HTML file. */
@@ -90,7 +101,7 @@ export function saveHtmlDownload(groups: CategoryGroup[]): void {
   const url = URL.createObjectURL(blob);
   const a = activeDocument.createElement("a");
   a.href = url;
-  a.download = EXPORT_HTML_FILENAME;
+  a.download = exportHtmlFilename();
   a.click();
   URL.revokeObjectURL(url);
 }

@@ -2,6 +2,7 @@ import type { HotkeyBinding } from "../types";
 import type { ResolvedCategoryGroup, OrphanSignature } from "../usage/usageResolver";
 import { MODIFIER_ORDER } from "../usage/usageTracker";
 import { compareKeys } from "./keyDisplay";
+import { compareStrings } from "../i18n/i18n";
 
 /** A single row in the flat "most-used shortcut" list — a bound entry or an orphan pseudo-entry. */
 export interface FlatHotkeyItem {
@@ -131,7 +132,7 @@ export function sortByKeyFlat(groups: ResolvedCategoryGroup[]): FlatHotkeyItem[]
       if (keyDiff !== 0) return keyDiff;
       const modDiff = compareModifiers(a.hotkey.modifiers, b.hotkey.modifiers);
       if (modDiff !== 0) return modDiff;
-      return a.name.localeCompare(b.name);
+      return compareStrings(a.name, b.name);
     })
     .map((row) => ({
       id: row.id,
@@ -172,7 +173,7 @@ export function groupByModifier(groups: ResolvedCategoryGroup[]): ResolvedCatego
       rows.sort((a, b) => {
         const keyDiff = compareKeys(a.hotkey.key, b.hotkey.key);
         if (keyDiff !== 0) return keyDiff;
-        return a.name.localeCompare(b.name);
+        return compareStrings(a.name, b.name);
       });
       const entries = rows.map((row) => ({
         id: row.id,

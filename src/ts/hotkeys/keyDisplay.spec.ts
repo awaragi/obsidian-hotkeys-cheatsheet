@@ -114,4 +114,9 @@ describe("compareKeys", () => {
   it("treats equal keys as equal", () => {
     expect(compareKeys("B", "B")).toBe(0);
   });
+
+  it("uses locale-aware comparison for ordinary keys when a locale is given", () => {
+    // Basic hiragana gojuon order — exercises the ja collation path via the explicit locale param.
+    expect(compareKeys("あ", "い", "ja")).toBeLessThan(0);
+  });
 });

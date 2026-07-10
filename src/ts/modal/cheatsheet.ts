@@ -1,6 +1,6 @@
 import { App, Modal } from "obsidian";
 import type { HotkeysCheatsheetSettings } from "../types";
-import { t } from "../i18n/i18n";
+import { t, locale, isRtl } from "../i18n/i18n";
 import { CheatsheetState } from "./state";
 import { Toolbar } from "./toolbar";
 import { GridRenderer } from "./grid";
@@ -32,6 +32,7 @@ export class CheatsheetModal extends Modal {
 
   onOpen() {
     this.modalEl.addClass("hkc-full-modal");
+    this.modalEl.setAttribute("dir", isRtl(locale()) ? "rtl" : "ltr");
     this.titleEl.setText(t("modal.title"));
 
     this.state.load(this.app);

@@ -1,5 +1,6 @@
 import type { HotkeyBinding, HotkeysCheatsheetSettings } from "../types";
-import { t } from "../i18n/i18n";
+import { t, locale, isRtl } from "../i18n/i18n";
+import { categoryDisplayLabel } from "../hotkeys/categories";
 import { modLabel, keyIcon } from "../hotkeys/keyDisplay";
 import { matchesFilters, matchesFlatItem } from "../hotkeys/filterHotkeys";
 import { countToGlyph } from "../usage/usageGlyph";
@@ -120,7 +121,7 @@ export class GridRenderer {
       if (category === "") return t("modal.sort_no_modifier");
       return category.split("+").map(modLabel).join(" + ");
     }
-    return category;
+    return categoryDisplayLabel(category);
   }
 
   private renderCategorySection(
@@ -140,9 +141,10 @@ export class GridRenderer {
       cls: "hkc-category-heading",
     });
 
-    // Arrow indicator
+    // Arrow indicator — a reading-order affordance ("expand toward here"), so
+    // unlike KEY_ICONS' physical-key arrows, this one mirrors under RTL.
     const arrow = heading.createSpan({ cls: "hkc-collapse-arrow" });
-    arrow.textContent = isCollapsed ? "▸" : "▾";
+    arrow.textContent = isCollapsed ? (isRtl(locale()) ? "◂" : "▸") : "▾";
     heading.appendText(" " + headingLabel);
 
     if (showUsage && aggregate > 0) {

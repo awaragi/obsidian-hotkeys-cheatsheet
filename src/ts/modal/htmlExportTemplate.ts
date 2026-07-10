@@ -1,8 +1,9 @@
 import type { CategoryGroup } from "../types";
 import { modLabel, keyIcon } from "../hotkeys/keyDisplay";
+import { categoryDisplayLabel } from "../hotkeys/categories";
 
 export const HTML_TEMPLATE = `<!DOCTYPE html>
-<html lang="en">
+<html lang="{{LANG}}" dir="{{DIR}}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -158,11 +159,19 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
 </body>
 </html>`;
 
-export function fillTemplate(title: string, date: string, content: string): string {
+export function fillTemplate(
+  title: string,
+  date: string,
+  content: string,
+  lang: string,
+  dir: "ltr" | "rtl"
+): string {
   return HTML_TEMPLATE
     .replaceAll("{{TITLE}}", title)
     .replaceAll("{{DATE}}", date)
-    .replaceAll("{{CONTENT}}", content);
+    .replaceAll("{{CONTENT}}", content)
+    .replaceAll("{{LANG}}", lang)
+    .replaceAll("{{DIR}}", dir);
 }
 
 /** Escapes `|` so a command name can't be misread as a Markdown table column separator. */
@@ -200,7 +209,7 @@ export function renderHtmlSections(groups: CategoryGroup[]): string {
 
     parts.push(`
     <div class="hkc-section">
-      <h2 class="hkc-category-heading">${escapeHtml(group.category)}</h2>
+      <h2 class="hkc-category-heading">${escapeHtml(categoryDisplayLabel(group.category))}</h2>
       ${entries.join("")}
     </div>`);
   }

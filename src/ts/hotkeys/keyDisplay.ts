@@ -1,4 +1,5 @@
 import { Platform } from "obsidian";
+import { locale, compareStrings } from "../i18n/i18n";
 
 /** Human-readable modifier badge labels on macOS. */
 export const MOD_LABEL_MAC: Record<string, string> = {
@@ -48,7 +49,11 @@ export function filterLabel(token: string): string {
   return FILTER_LABEL_MAC[token] ?? token;
 }
 
-/** Maps uppercased key names to display symbols. */
+/**
+ * Maps uppercased key names to display symbols. The arrow glyphs represent
+ * physical keyboard keys, not reading-direction affordances — they SHALL NOT
+ * mirror under an RTL locale (unlike e.g. the collapse chevron in grid.ts).
+ */
 export const KEY_ICONS: Record<string, string> = {
   ARROWUP: "↑",
   ARROWDOWN: "↓",
@@ -81,16 +86,17 @@ const SPECIAL_KEY_ORDER = Object.keys(KEY_ICONS);
 /**
  * Orders two raw (already-uppercased) key values for display: special keys
  * (arrows, Enter, Escape, Tab, ...) sort before ordinary character keys, in
- * `SPECIAL_KEY_ORDER`; ordinary keys sort alphabetically among themselves.
+ * `SPECIAL_KEY_ORDER`; ordinary keys sort alphabetically among themselves,
+ * using locale-aware comparison against the active locale by default.
  * Shared by any view that orders hotkeys by key, so the "special keys float
  * to the top" rule stays consistent everywhere.
  */
-export function compareKeys(a: string, b: string): number {
+export function compareKeys(a: string, b: string, loc: string = locale()): number {
   const aIndex = SPECIAL_KEY_ORDER.indexOf(a);
   const bIndex = SPECIAL_KEY_ORDER.indexOf(b);
   const aSpecial = aIndex !== -1;
   const bSpecial = bIndex !== -1;
   if (aSpecial && bSpecial) return aIndex - bIndex;
   if (aSpecial !== bSpecial) return aSpecial ? -1 : 1;
-  return a.localeCompare(b);
+  return compareStrings(a, b, loc);
 }

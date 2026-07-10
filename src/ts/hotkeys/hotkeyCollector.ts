@@ -1,7 +1,8 @@
 import { App } from "obsidian";
-import { CORE_PREFIX_MAP, CATEGORY_ORDER } from "./categories";
+import { CORE_PREFIX_MAP, CATEGORY_ORDER, OTHER_CATEGORY } from "./categories";
 import type { HotkeyBinding, HotkeyEntry, CategoryGroup } from "../types";
 import { buildSignature } from "../usage/usageTracker";
+import { compareStrings } from "../i18n/i18n";
 
 export type { HotkeyBinding, HotkeyEntry, CategoryGroup };
 
@@ -59,7 +60,7 @@ export function categorise(id: string, displayName: string): string {
     return displayName.slice(0, separatorIdx);
   }
 
-  return "Other";
+  return OTHER_CATEGORY;
 }
 
 /** Strip "Category: " prefix from a command display name if present. */
@@ -126,14 +127,14 @@ export function buildHotkeyGroups(
 
   // Sort entries alphabetically within each group
   for (const bucket of groupMap.values()) {
-    bucket.sort((a, b) => a.name.localeCompare(b.name));
+    bucket.sort((a, b) => compareStrings(a.name, b.name));
   }
 
   // Output order: core categories in defined order, then plugins alphabetically
   const coreCategories = CATEGORY_ORDER.filter((cat) => groupMap.has(cat));
   const pluginCategories = [...groupMap.keys()]
     .filter((cat) => !CATEGORY_ORDER.includes(cat))
-    .sort((a, b) => a.localeCompare(b));
+    .sort((a, b) => compareStrings(a, b));
 
   return [...coreCategories, ...pluginCategories].map((category) => ({
     category,

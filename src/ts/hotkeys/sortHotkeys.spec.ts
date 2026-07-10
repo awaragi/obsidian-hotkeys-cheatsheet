@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 
 vi.mock("obsidian", () => ({
   Keymap: { isModifier: () => false },
@@ -137,6 +137,26 @@ describe("sortByKeyFlat", () => {
     const result = sortByKeyFlat(makeKeyModifierGroups());
     expect(result.every((item) => !item.isOrphan)).toBe(true);
   });
+
+  it("orders Japanese command names using ja collation when the active locale is ja", () => {
+    // Same key/modifier on every entry, so the comparator falls through to the name tie-break.
+    vi.stubGlobal("window", { moment: { locale: () => "ja" } });
+    try {
+      const groups: ResolvedCategoryGroup[] = [
+        {
+          category: "Plugin",
+          aggregate: 0,
+          entries: [
+            { id: "e1", name: "い", category: "Plugin", hotkeys: [{ modifiers: ["Mod"], key: "K" }], count: 0, bindingCounts: [0], isModifiedFromDefault: false },
+            { id: "e2", name: "あ", category: "Plugin", hotkeys: [{ modifiers: ["Mod"], key: "K" }], count: 0, bindingCounts: [0], isModifiedFromDefault: false },
+          ],
+        },
+      ];
+      expect(sortByKeyFlat(groups).map((item) => item.name)).toEqual(["あ", "い"]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });
 
 describe("groupByModifier", () => {
@@ -173,5 +193,29 @@ describe("groupByModifier", () => {
     const result = groupByModifier(groups);
     const modGroup = result.find((g) => g.category === "Mod")!;
     expect(modGroup.entries.map((e) => e.id)).toEqual(["e2::0", "e1::0"]);
+  });
+
+  describe("name tie-break under the active locale", () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it("orders Japanese command names using ja collation when the active locale is ja", () => {
+      // Same key/modifier on every entry, so the comparator falls through to the name tie-break.
+      vi.stubGlobal("window", { moment: { locale: () => "ja" } });
+      const groups: ResolvedCategoryGroup[] = [
+        {
+          category: "Plugin",
+          aggregate: 0,
+          entries: [
+            { id: "e1", name: "い", category: "Plugin", hotkeys: [{ modifiers: ["Mod"], key: "K" }], count: 0, bindingCounts: [0], isModifiedFromDefault: false },
+            { id: "e2", name: "あ", category: "Plugin", hotkeys: [{ modifiers: ["Mod"], key: "K" }], count: 0, bindingCounts: [0], isModifiedFromDefault: false },
+          ],
+        },
+      ];
+      const result = groupByModifier(groups);
+      const modGroup = result.find((g) => g.category === "Mod")!;
+      expect(modGroup.entries.map((e) => e.name)).toEqual(["あ", "い"]);
+    });
   });
 });
