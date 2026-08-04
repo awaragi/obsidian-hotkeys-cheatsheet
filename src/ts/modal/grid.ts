@@ -1,9 +1,12 @@
+import { Platform, setIcon } from "obsidian";
 import type { HotkeyBinding, HotkeysCheatsheetSettings } from "../types";
 import { t, locale, isRtl } from "../i18n/i18n";
 import { categoryDisplayLabel } from "../hotkeys/categories";
 import { modLabel, keyIcon } from "../hotkeys/keyDisplay";
 import { matchesFilters, matchesFlatItem } from "../hotkeys/filterHotkeys";
 import { countToGlyph } from "../usage/usageGlyph";
+import { buildSignature } from "../usage/usageTracker";
+import { systemShortcutLabelKey } from "../usage/systemShortcuts";
 import {
   sortByMostUsedCategory,
   sortByMostUsedShortcut,
@@ -175,15 +178,21 @@ export class GridRenderer {
   ) {
     const section = parent.createDiv({ cls: "hkc-section hkc-flat-list" });
     for (const item of items) {
-      this.renderHotkeyEntryRow(
-        section,
-        item.isOrphan ? t("modal.no_command") : item.name,
-        item.hotkeys,
-        item.bindingCounts,
-        query,
-        showUsage,
-        { muted: item.isOrphan, disableKeyHighlight: item.isOrphan }
-      );
+      const name = item.isSuspectedSystemShortcut
+        ? t(
+            systemShortcutLabelKey(
+              buildSignature(item.hotkeys[0].modifiers, item.hotkeys[0].key),
+              Platform.isMacOS
+            ) ?? "modal.system_shortcut"
+          )
+        : item.isOrphan
+          ? t("modal.no_command")
+          : item.name;
+      this.renderHotkeyEntryRow(section, name, item.hotkeys, item.bindingCounts, query, showUsage, {
+        muted: item.isOrphan,
+        disableKeyHighlight: item.isOrphan,
+        system: item.isSuspectedSystemShortcut,
+      });
     }
   }
 
@@ -202,13 +211,19 @@ export class GridRenderer {
     bindingCounts: number[],
     query: string,
     showUsage: boolean,
-    options: { muted?: boolean; disableKeyHighlight?: boolean } = {}
+    options: { muted?: boolean; disableKeyHighlight?: boolean; system?: boolean } = {}
   ) {
     const entryEl = parent.createDiv({ cls: "hkc-entry" });
 
     // Command name with optional search highlight
     const nameEl = entryEl.createDiv({ cls: "hkc-entry-name" });
-    if (options.muted) {
+    if (options.system) {
+      nameEl.addClass("hkc-entry-name--muted");
+      nameEl.addClass("hkc-entry-name--system");
+      nameEl.setAttribute("title", t("modal.system_shortcut_tooltip"));
+      setIcon(nameEl.createSpan({ cls: "hkc-entry-name-icon" }), "lock");
+      nameEl.createSpan({ text: name });
+    } else if (options.muted) {
       nameEl.setText(name);
       nameEl.addClass("hkc-entry-name--muted");
     } else if (query && name.toLowerCase().includes(query)) {

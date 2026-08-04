@@ -421,6 +421,25 @@
   font-style: italic;
 }
 
+/* Suspected OS/Electron-reserved shortcut (e.g. paste) — same muted look as a
+   generic "No command" orphan, distinguished only by the lock icon, since
+   both are equally unbound; the icon just explains *why*. */
+.hkc-entry-name--system {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hkc-entry-name-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.hkc-entry-name-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
 /* Jump-to-native-hotkey-editor affordance */
 .hkc-entry-name--clickable {
   cursor: pointer;

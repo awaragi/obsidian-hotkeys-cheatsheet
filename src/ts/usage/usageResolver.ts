@@ -1,5 +1,6 @@
 import type { CategoryGroup, HotkeyEntry } from "../types";
 import { buildSignature, parseSignature } from "./usageTracker";
+import { isSuspectedSystemShortcut } from "./systemShortcuts";
 
 export interface ResolvedHotkeyEntry extends HotkeyEntry {
   count: number;
@@ -20,6 +21,8 @@ export interface OrphanSignature {
   modifiers: string[];
   key: string;
   count: number;
+  /** True when this signature matches a known OS/Electron-reserved shortcut (e.g. paste) that can never be bound to an Obsidian command. */
+  isSuspectedSystemShortcut: boolean;
 }
 
 export interface UsageResolution {
@@ -36,7 +39,8 @@ export interface UsageResolution {
  */
 export function resolveUsage(
   groups: CategoryGroup[],
-  counts: Record<string, number>
+  counts: Record<string, number>,
+  isMac: boolean
 ): UsageResolution {
   const matchedSignatures = new Set<string>();
   let maxEntryCount = 0;
@@ -66,7 +70,13 @@ export function resolveUsage(
     .filter(([signature]) => !matchedSignatures.has(signature))
     .map(([signature, count]) => {
       const { modifiers, key } = parseSignature(signature);
-      return { signature, modifiers, key, count };
+      return {
+        signature,
+        modifiers,
+        key,
+        count,
+        isSuspectedSystemShortcut: isSuspectedSystemShortcut(signature, isMac),
+      };
     });
 
   return { groups: resolvedGroups, orphans, maxEntryCount, maxCategoryAggregate };

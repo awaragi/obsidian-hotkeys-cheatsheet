@@ -13,6 +13,8 @@ export interface FlatHotkeyItem {
   /** Usage count for each binding in `hotkeys`, same order/length — used to render a per-badge count instead of one shared aggregate. */
   bindingCounts: number[];
   isOrphan: boolean;
+  /** True when this is an orphan row matching a known OS-reserved shortcut (e.g. paste). Always false for bound entries. */
+  isSuspectedSystemShortcut: boolean;
   isModifiedFromDefault: boolean;
   /** The real command id — distinct from `id` when this row is a per-binding composite (e.g. `"cmd::0"` from `sortByKeyFlat`). */
   commandId: string;
@@ -49,6 +51,7 @@ export function sortByMostUsedShortcut(
       count: entry.count,
       bindingCounts: entry.bindingCounts,
       isOrphan: false,
+      isSuspectedSystemShortcut: false,
       isModifiedFromDefault: entry.isModifiedFromDefault,
       commandId: entry.id,
     }))
@@ -61,6 +64,7 @@ export function sortByMostUsedShortcut(
     count: orphan.count,
     bindingCounts: [orphan.count],
     isOrphan: true,
+    isSuspectedSystemShortcut: orphan.isSuspectedSystemShortcut,
     isModifiedFromDefault: false,
     commandId: orphan.signature,
   }));
@@ -141,6 +145,7 @@ export function sortByKeyFlat(groups: ResolvedCategoryGroup[]): FlatHotkeyItem[]
       count: row.count,
       bindingCounts: [row.count],
       isOrphan: false,
+      isSuspectedSystemShortcut: false,
       isModifiedFromDefault: row.isModifiedFromDefault,
       commandId: row.commandId,
     }));

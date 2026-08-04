@@ -1,3 +1,4 @@
+import { Platform } from "obsidian";
 import type { App } from "obsidian";
 import type { CategoryGroup, SortMode } from "../types";
 import type { UsageResolution } from "../usage/usageResolver";
@@ -54,7 +55,7 @@ export class CheatsheetState {
     this.pendingOverwrite = null;
     this.sortMode = "category";
     this.groups = collectHotkeys(app);
-    this.usageResolution = resolveUsage(this.groups, getUsageCounts());
+    this.usageResolution = resolveUsage(this.groups, getUsageCounts(), Platform.isMacOS);
     this.conflictingIds = resolveConflicts(this.groups);
     this.currentGroupLabels = this.groups.map((g) => g.category);
   }

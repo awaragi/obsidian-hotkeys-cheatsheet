@@ -63,7 +63,7 @@ describe("sortByMostUsedShortcut", () => {
 
   it("includes orphan pseudo-entries only in this mode's output", () => {
     const result = sortByMostUsedShortcut(makeGroups(), [
-      { signature: "Mod+Shift+K", modifiers: ["Shift"], key: "K", count: 52 },
+      { signature: "Mod+Shift+K", modifiers: ["Shift"], key: "K", count: 52, isSuspectedSystemShortcut: false },
     ]);
     const orphan = result.find((item) => item.isOrphan);
     expect(orphan).toEqual({
@@ -73,10 +73,26 @@ describe("sortByMostUsedShortcut", () => {
       count: 52,
       bindingCounts: [52],
       isOrphan: true,
+      isSuspectedSystemShortcut: false,
       isModifiedFromDefault: false,
       commandId: "Mod+Shift+K",
     });
     expect(result[0].id).toBe("Mod+Shift+K");
+  });
+
+  it("carries a suspected-system-shortcut orphan's flag through to the flat item", () => {
+    const result = sortByMostUsedShortcut(makeGroups(), [
+      { signature: "Mod+V", modifiers: ["Mod"], key: "V", count: 99, isSuspectedSystemShortcut: true },
+    ]);
+    const orphan = result.find((item) => item.isOrphan)!;
+    expect(orphan.isSuspectedSystemShortcut).toBe(true);
+  });
+
+  it("never flags bound-entry rows as a suspected system shortcut", () => {
+    const result = sortByMostUsedShortcut(makeGroups(), [
+      { signature: "Mod+V", modifiers: ["Mod"], key: "V", count: 99, isSuspectedSystemShortcut: true },
+    ]);
+    expect(result.filter((item) => !item.isOrphan).every((item) => !item.isSuspectedSystemShortcut)).toBe(true);
   });
 });
 

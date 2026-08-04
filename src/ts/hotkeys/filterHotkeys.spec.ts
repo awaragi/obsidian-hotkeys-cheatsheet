@@ -89,6 +89,7 @@ function makeFlatItem(overrides: Partial<FlatHotkeyItem>): FlatHotkeyItem {
     count: 3,
     bindingCounts: [3],
     isOrphan: false,
+    isSuspectedSystemShortcut: false,
     isModifiedFromDefault: false,
     commandId: "test:cmd",
     ...overrides,

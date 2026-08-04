@@ -6,6 +6,9 @@ import ja from "./locales/ja.json";
 
 type Translations = typeof en;
 
+/** Every valid translation key, exported so other modules can type-check keys they reference (e.g. a lookup table of dynamic i18n keys) without importing the locale files directly. */
+export type TranslationKey = keyof Translations;
+
 /** Registered locales, keyed by code. Exported so tests can verify completeness dynamically. */
 export const locales: Record<string, Partial<Translations>> = { en, fr, es, ar, ja };
 
